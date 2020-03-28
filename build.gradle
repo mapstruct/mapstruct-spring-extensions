@@ -10,36 +10,50 @@ plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
     id 'jacoco'
+    id 'maven'
 }
 
-repositories {
-    // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    jcenter()
-}
+group = 'uk.co.kleindelao.mapstruct.spring'
+version = '0.0.1'
 
-dependencies {
-    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation 'org.mapstruct:mapstruct:1.3.1.Final'
-    implementation 'org.springframework:spring-core:5.0.0.RELEASE'
-
-    // Use JUnit Jupiter API for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
-
-    // Use JUnit Jupiter Engine for testing.
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
-}
-
-test {
-    // Use junit platform for unit tests
-    useJUnitPlatform()
-}
-
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        html.enabled false
+allprojects {
+    repositories {
+        // Use jcenter for resolving dependencies.
+        // You can declare any Maven/Ivy/file repository here.
+        jcenter()
+        mavenCentral()
     }
 }
 
-check.dependsOn jacocoTestReport
+subprojects {
+    apply plugin: "java-library"
+
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
+    }
+
+    compileJava {
+        sourceCompatibility '1.8'
+        targetCompatibility '1.8'
+    }
+
+    test {
+        // Use junit platform for unit tests
+        useJUnitPlatform()
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.enabled true
+            html.enabled false
+        }
+    }
+
+    check.dependsOn jacocoTestReport
+}
+
+wrapper {
+    gradleVersion = '6.3'
+}
+
