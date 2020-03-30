@@ -1,12 +1,11 @@
 package uk.co.kleindelao.mapstruct.spring.converter;
 
+import javax.annotation.Generated;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Component;
 import test.Car;
 import test.CarDto;
-
-import javax.annotation.Generated;
 
 @Generated(
         value = "uk.co.kleindelao.mapstruct.spring.converter.ConversionServiceBridgeGenerator",
