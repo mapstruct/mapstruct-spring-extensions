@@ -1,5 +1,10 @@
 package uk.co.kleindelao.mapstruct.spring.example;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static uk.co.kleindelao.mapstruct.spring.example.Assertions.assertThat;
+import static uk.co.kleindelao.mapstruct.spring.example.CarType.OTHER;
+import static uk.co.kleindelao.mapstruct.spring.example.SeatMaterial.LEATHER;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,10 +16,6 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import static uk.co.kleindelao.mapstruct.spring.example.Assertions.assertThat;
-import static uk.co.kleindelao.mapstruct.spring.example.CarType.OTHER;
-import static uk.co.kleindelao.mapstruct.spring.example.SeatMaterial.LEATHER;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
@@ -45,6 +46,12 @@ public class ConversionServiceBridgeIntegrationTest {
   }
 
   @Test
+  void shouldKnowAllMappers() {
+    then(conversionService.canConvert(Car.class, CarDto.class)).isTrue();
+    then(conversionService.canConvert(SeatConfiguration.class, SeatConfigurationDto.class)).isTrue();
+  }
+
+  @Test
   void shouldMapAllAttributes() {
     // Given
     final Car car =
@@ -57,7 +64,7 @@ public class ConversionServiceBridgeIntegrationTest {
                     .setNumberOfSeats(TEST_NUMBER_OF_SEATS));
 
     // When
-    final CarDto mappedCar = carMapper.convert(car);
+    final CarDto mappedCar = conversionService.convert(car, CarDto.class);
 
     // Then
     assertThat(mappedCar).isNotNull().hasMake(TEST_MAKE).hasType(String.valueOf(TEST_CAR_TYPE));
