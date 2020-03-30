@@ -6,6 +6,6 @@ import org.springframework.core.convert.converter.Converter;
 
 @Mapper(config = MapperSpringConfig.class)
 public interface CarMapper extends Converter<Car, CarDto> {
-    @Mapping(source = "numberOfSeats", target = "seatCount")
+    @Mapping(target = "seats", source = "seatConfiguration")
     CarDto convert(Car car);
 }
