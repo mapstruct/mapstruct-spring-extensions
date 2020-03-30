@@ -5,8 +5,7 @@ import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
-public class Car {
-    private String make;
-    private SeatConfiguration seatConfiguration;
-    private CarType type;
+public class SeatConfiguration {
+    private int numberOfSeats;
+    private SeatMaterial seatMaterial;
 }
