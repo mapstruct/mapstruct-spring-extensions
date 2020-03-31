@@ -1,10 +1,18 @@
 package uk.co.kleindelao.mapstruct.spring.converter;
 
-import com.squareup.javapoet.ClassName;
-import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.core.convert.converter.Converter;
-import uk.co.kleindelao.mapstruct.spring.converter.ConversionServiceBridgeDescriptor.ConversionServiceBridgeDescriptorBuilder;
+import static javax.lang.model.element.ElementKind.METHOD;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.type.TypeKind.DECLARED;
+import static javax.tools.Diagnostic.Kind.ERROR;
 
+import com.squareup.javapoet.ClassName;
+import java.io.IOException;
+import java.io.Writer;
+import java.time.Clock;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -14,16 +22,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
-import java.io.IOException;
-import java.io.Writer;
-import java.time.Clock;
-import java.util.Optional;
-import java.util.Set;
-
-import static javax.lang.model.element.ElementKind.METHOD;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.type.TypeKind.DECLARED;
-import static javax.tools.Diagnostic.Kind.ERROR;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.core.convert.converter.Converter;
 
 @SupportedAnnotationTypes(ConverterMapperProcessor.ORG_MAPSTRUCT_MAPPER)
 public class ConverterMapperProcessor extends AbstractProcessor {
@@ -36,14 +36,13 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     final Types typeUtils = processingEnv.getTypeUtils();
-    final ConversionServiceBridgeDescriptorBuilder descriptorBuilder =
-        ConversionServiceBridgeDescriptor.builder()
-            .bridgeClassName(
-                ClassName.get(
-                    ConverterMapperProcessor.class.getPackage().getName(),
-                    "ConversionServiceBridge"));
+    final ConversionServiceBridgeDescriptor descriptor = new ConversionServiceBridgeDescriptor();
+    descriptor.setBridgeClassName(
+        ClassName.get(
+            ConverterMapperProcessor.class.getPackage().getName(), "ConversionServiceBridge"));
     for (final TypeElement annotation : annotations) {
       if (ORG_MAPSTRUCT_MAPPER.contentEquals(annotation.getQualifiedName())) {
+        final List<Pair<ClassName, ClassName>> fromToMappings = new ArrayList<>();
         roundEnv.getElementsAnnotatedWith(annotation).stream()
             .filter(mapper -> mapper.asType().getKind() == DECLARED)
             .filter(mapper -> getConverterSupertype(mapper).isPresent())
@@ -60,32 +59,35 @@ public class ConverterMapperProcessor extends AbstractProcessor {
                                 typeUtils.isSameType(
                                     getFirstParameterType((ExecutableElement) convert),
                                     getFirstTypeArgument(getConverterSupertype(mapper).get())))
-                        .forEach(
+                        .map(
                             convert ->
-                                descriptorBuilder.fromToMapping(
-                                    Pair.of(
-                                        (ClassName)
-                                            ((ExecutableElement) convert)
-                                                .getParameters().stream()
-                                                    .map(Element::asType)
-                                                    .map(ClassName::get)
-                                                    .findFirst()
-                                                    .get(),
-                                        (ClassName)
-                                            ClassName.get(
-                                                ((ExecutableElement) convert).getReturnType())))));
+                                Pair.of(
+                                    (ClassName)
+                                        ((ExecutableElement) convert)
+                                            .getParameters().stream()
+                                                .map(Element::asType)
+                                                .map(ClassName::get)
+                                                .findFirst()
+                                                .get(),
+                                    (ClassName)
+                                        ClassName.get(
+                                            ((ExecutableElement) convert).getReturnType())))
+                        .forEach(fromToMappings::add));
+        descriptor.setFromToMappings(fromToMappings);
         try (final Writer outputWriter =
-                     processingEnv
-                             .getFiler()
-                             .createSourceFile(
-                                     ConverterMapperProcessor.class.getPackage().getName() + ".ConversionServiceBridge")
-                             .openWriter()) {
-          bridgeGenerator.writeConversionServiceBridge(descriptorBuilder.build(), outputWriter);
+            processingEnv
+                .getFiler()
+                .createSourceFile(
+                    ConverterMapperProcessor.class.getPackage().getName()
+                        + ".ConversionServiceBridge")
+                .openWriter()) {
+          bridgeGenerator.writeConversionServiceBridge(descriptor, outputWriter);
         } catch (IOException e) {
           processingEnv
-                  .getMessager()
-                  .printMessage(
-                          ERROR, "Error while opening ConversionServiceBridge output file: " + e.getMessage());
+              .getMessager()
+              .printMessage(
+                  ERROR,
+                  "Error while opening ConversionServiceBridge output file: " + e.getMessage());
         }
       }
     }

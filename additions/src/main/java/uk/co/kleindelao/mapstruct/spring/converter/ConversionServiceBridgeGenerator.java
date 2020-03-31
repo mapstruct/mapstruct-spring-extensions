@@ -1,22 +1,23 @@
 package uk.co.kleindelao.mapstruct.spring.converter;
 
-import com.squareup.javapoet.*;
-import lombok.Value;
-import org.springframework.core.convert.ConversionService;
+import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.Modifier.*;
 
+import com.squareup.javapoet.*;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import org.springframework.core.convert.ConversionService;
 
-import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.*;
-
-@Value
 public class ConversionServiceBridgeGenerator {
-  Clock clock;
+  private final Clock clock;
+
+  public ConversionServiceBridgeGenerator(final Clock clock) {
+    this.clock = clock;
+  }
 
   public void writeConversionServiceBridge(
       ConversionServiceBridgeDescriptor descriptor, Writer out) {
