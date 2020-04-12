@@ -16,8 +16,8 @@ import java.lang.annotation.Target;
 public @interface SpringMapperConfig {
     /**
      * The package name for the generated &quot;Bridge&quot; between the MapStruct mappers and Spring's
-     * {@link org.springframework.core.convert.ConversionService}. If omitted, the package name will be the same as
-     * the one for the annotated type.
+     * {@link org.springframework.core.convert.ConversionService}. If omitted or empty, the package name will be the
+     * same as the one for the annotated type.
      *
      * @return The package name for the generated &quot;Bridge&quot;.
      */

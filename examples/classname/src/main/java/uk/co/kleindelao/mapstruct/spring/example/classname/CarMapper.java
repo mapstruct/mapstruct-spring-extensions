@@ -1,8 +1,10 @@
-package uk.co.kleindelao.mapstruct.spring.example;
+package uk.co.kleindelao.mapstruct.spring.example.classname;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.core.convert.converter.Converter;
+import uk.co.kleindelao.mapstruct.spring.example.Car;
+import uk.co.kleindelao.mapstruct.spring.example.CarDto;
 
 @Mapper(config = MapperSpringConfig.class)
 public interface CarMapper extends Converter<Car, CarDto> {

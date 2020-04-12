@@ -1,8 +1,10 @@
-package uk.co.kleindelao.mapstruct.spring.example;
+package uk.co.kleindelao.mapstruct.spring.example.packageandclass;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.core.convert.converter.Converter;
+import uk.co.kleindelao.mapstruct.spring.example.SeatConfiguration;
+import uk.co.kleindelao.mapstruct.spring.example.SeatConfigurationDto;
 
 @Mapper(config = MapperSpringConfig.class)
 public interface SeatConfigurationMapper extends Converter<SeatConfiguration, SeatConfigurationDto> {

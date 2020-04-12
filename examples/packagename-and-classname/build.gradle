@@ -1,6 +1,7 @@
 dependencies {
     annotationProcessor project(":additions")
     implementation project(":examples:model")
+    implementation project(":annotations")
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     compileOnly 'javax.annotation:jsr250-api:1.0'
     implementation 'org.mapstruct:mapstruct:1.4.0-SNAPSHOT'

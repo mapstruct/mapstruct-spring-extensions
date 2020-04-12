@@ -15,8 +15,8 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.co.kleindelao.mapstruct.spring.example.noconfig.CarMapper;
-import uk.co.kleindelao.mapstruct.spring.example.noconfig.SeatConfigurationMapper;
+import uk.co.kleindelao.mapstruct.spring.example.packageandclass.CarMapper;
+import uk.co.kleindelao.mapstruct.spring.example.packageandclass.SeatConfigurationMapper;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
