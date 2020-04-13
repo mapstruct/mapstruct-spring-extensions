@@ -17,6 +17,7 @@ import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -40,6 +41,11 @@ public class ConverterMapperProcessor extends AbstractProcessor {
 
   private final ConversionServiceBridgeGenerator bridgeGenerator =
       new ConversionServiceBridgeGenerator(Clock.systemUTC());
+
+  @Override
+  public SourceVersion getSupportedSourceVersion() {
+    return SourceVersion.latestSupported();
+  }
 
   @Override
   public boolean process(
