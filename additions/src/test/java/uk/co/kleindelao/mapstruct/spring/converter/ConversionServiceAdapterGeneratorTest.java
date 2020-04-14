@@ -14,14 +14,14 @@ import java.time.ZonedDateTime;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
-class ConversionServiceBridgeGeneratorTest {
+class ConversionServiceAdapterGeneratorTest {
   private static final Clock FIXED_CLOCK =
       Clock.fixed(
           ZonedDateTime.of(2020, 3, 29, 15, 21, 34, (int) (236 * Math.pow(10, 6)), ZoneId.of("Z"))
               .toInstant(),
           ZoneId.of("Z"));
-  private final ConversionServiceBridgeGenerator generator =
-      new ConversionServiceBridgeGenerator(FIXED_CLOCK);
+  private final ConversionServiceAdapterGenerator generator =
+      new ConversionServiceAdapterGenerator(FIXED_CLOCK);
 
   @Test
   void shouldGenerateMatchingOutput() throws IOException {
@@ -29,7 +29,7 @@ class ConversionServiceBridgeGeneratorTest {
     final ConversionServiceBridgeDescriptor descriptor = new ConversionServiceBridgeDescriptor();
     descriptor.setBridgeClassName(
         ClassName.get(
-            ConversionServiceBridgeGeneratorTest.class.getPackage().getName(),
+            ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
             "ConversionServiceBridge"));
     descriptor.setFromToMappings(
         singletonList(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto"))));

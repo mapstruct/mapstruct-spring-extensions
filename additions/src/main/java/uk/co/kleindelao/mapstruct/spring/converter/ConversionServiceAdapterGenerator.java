@@ -12,10 +12,10 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import org.springframework.core.convert.ConversionService;
 
-public class ConversionServiceBridgeGenerator {
+public class ConversionServiceAdapterGenerator {
   private final Clock clock;
 
-  public ConversionServiceBridgeGenerator(final Clock clock) {
+  public ConversionServiceAdapterGenerator(final Clock clock) {
     this.clock = clock;
   }
 
@@ -82,7 +82,7 @@ public class ConversionServiceBridgeGenerator {
 
   private AnnotationSpec buildGeneratedAnnotationSpec() {
     return AnnotationSpec.builder(ClassName.get("javax.annotation", "Generated"))
-        .addMember("value", "$S", ConversionServiceBridgeGenerator.class.getName())
+        .addMember("value", "$S", ConversionServiceAdapterGenerator.class.getName())
         .addMember("date", "$S", DateTimeFormatter.ISO_INSTANT.format(ZonedDateTime.now(clock)))
         .build();
   }

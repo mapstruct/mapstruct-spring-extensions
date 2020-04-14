@@ -39,8 +39,16 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   protected static final String SPRING_MAPPER_CONFIG =
       "uk.co.kleindelao.mapstruct.spring.SpringMapperConfig";
 
-  private final ConversionServiceBridgeGenerator bridgeGenerator =
-      new ConversionServiceBridgeGenerator(Clock.systemUTC());
+  private final ConversionServiceAdapterGenerator adapterGenerator;
+
+  public ConverterMapperProcessor() {
+    this(new ConversionServiceAdapterGenerator(Clock.systemUTC()));
+  }
+
+  ConverterMapperProcessor(final ConversionServiceAdapterGenerator adapterGenerator) {
+    super();
+    this.adapterGenerator = adapterGenerator;
+  }
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
@@ -118,7 +126,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
             .createSourceFile(
                 bridgePackageAndClass.getLeft() + "." + bridgePackageAndClass.getRight())
             .openWriter()) {
-      bridgeGenerator.writeConversionServiceBridge(descriptor, outputWriter);
+      adapterGenerator.writeConversionServiceBridge(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv
           .getMessager()
