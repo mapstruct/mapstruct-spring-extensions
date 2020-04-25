@@ -1,5 +1,5 @@
 dependencies {
-    annotationProcessor project(":additions")
+    annotationProcessor project(":extensions")
     implementation project(":examples:model")
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     compileOnly 'javax.annotation:jsr250-api:1.0'
