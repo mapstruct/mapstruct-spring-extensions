@@ -27,7 +27,6 @@ import javax.lang.model.util.Types;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.core.convert.converter.Converter;
 import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 @SupportedAnnotationTypes({
@@ -38,6 +37,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   protected static final String MAPPER = "org.mapstruct.Mapper";
   protected static final String SPRING_MAPPER_CONFIG =
       "org.mapstruct.extensions.spring.SpringMapperConfig";
+  protected static final String SPRING_CONVERTER_FULL_NAME = "org.springframework.core.convert.converter.Converter";
 
   private final ConversionServiceAdapterGenerator adapterGenerator;
 
@@ -170,7 +170,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     final Types typeUtils = processingEnv.getTypeUtils();
     return typeUtils.directSupertypes(mapper.asType()).stream()
         .filter(
-            supertype -> typeUtils.erasure(supertype).toString().equals(Converter.class.getName()))
+            supertype -> typeUtils.erasure(supertype).toString().equals(SPRING_CONVERTER_FULL_NAME))
         .findFirst();
   }
 

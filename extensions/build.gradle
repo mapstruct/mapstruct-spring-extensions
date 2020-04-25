@@ -1,7 +1,6 @@
 dependencies {
     implementation project(":annotations")
     implementation 'org.mapstruct:mapstruct:1.4.0-SNAPSHOT'
-    implementation 'org.springframework:spring-core:5.0.0.RELEASE'
     implementation 'com.squareup:javapoet:1.12.1'
     implementation 'org.apache.commons:commons-lang3:3.10'
 
@@ -9,4 +8,5 @@ dependencies {
     testImplementation 'commons-io:commons-io:2.6'
     testImplementation 'com.google.guava:guava:28.2-jre'
     testImplementation 'org.mockito:mockito-junit-jupiter:3.3.3'
+    testImplementation 'org.springframework:spring-core:5.0.0.RELEASE'
 }

@@ -10,7 +10,6 @@ import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import org.springframework.core.convert.ConversionService;
 
 public class ConversionServiceAdapterGenerator {
   private final Clock clock;
@@ -75,7 +74,8 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private static FieldSpec buildInjectedConversionServiceFieldSpec() {
-    return FieldSpec.builder(ConversionService.class, "conversionService", PRIVATE)
+    return FieldSpec.builder(ClassName.get("org.springframework.core.convert","ConversionService"),
+            "conversionService", PRIVATE)
         .addAnnotation(ClassName.get("org.springframework.beans.factory.annotation", "Autowired"))
         .build();
   }
