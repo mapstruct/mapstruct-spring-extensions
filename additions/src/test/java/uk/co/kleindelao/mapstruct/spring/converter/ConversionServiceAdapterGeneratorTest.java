@@ -26,20 +26,20 @@ class ConversionServiceAdapterGeneratorTest {
   @Test
   void shouldGenerateMatchingOutput() throws IOException {
     // Given
-    final ConversionServiceBridgeDescriptor descriptor = new ConversionServiceBridgeDescriptor();
-    descriptor.setBridgeClassName(
+    final ConversionServiceAdapterDescriptor descriptor = new ConversionServiceAdapterDescriptor();
+    descriptor.setAdapterClassName(
         ClassName.get(
             ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
-            "ConversionServiceBridge"));
+            "ConversionServiceAdapter"));
     descriptor.setFromToMappings(
         singletonList(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto"))));
     final StringWriter outputWriter = new StringWriter();
 
     // When
-    generator.writeConversionServiceBridge(descriptor, outputWriter);
+    generator.writeConversionServiceAdapter(descriptor, outputWriter);
 
     // Then
     then(outputWriter.toString())
-        .isEqualToIgnoringWhitespace(resourceToString("/ConversionServiceBridge.java", UTF_8));
+        .isEqualToIgnoringWhitespace(resourceToString("/ConversionServiceAdapter.java", UTF_8));
   }
 }

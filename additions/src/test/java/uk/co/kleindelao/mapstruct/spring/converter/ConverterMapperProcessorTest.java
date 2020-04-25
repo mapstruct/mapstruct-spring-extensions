@@ -33,7 +33,7 @@ class ConverterMapperProcessorTest {
 
   @InjectMocks private ConverterMapperProcessor processor;
 
-  @Captor private ArgumentCaptor<ConversionServiceBridgeDescriptor> descriptorArgumentCaptor;
+  @Captor private ArgumentCaptor<ConversionServiceAdapterDescriptor> descriptorArgumentCaptor;
 
   private static Set<JavaFileObject> commonCompilationUnits;
   private static final String PACKAGE_NAME = "test";
@@ -178,8 +178,8 @@ class ConverterMapperProcessorTest {
     then(compileResult).isTrue();
     BDDMockito.then(adapterGenerator)
         .should()
-        .writeConversionServiceBridge(descriptorArgumentCaptor.capture(), any(Writer.class));
-    final ConversionServiceBridgeDescriptor descriptor = descriptorArgumentCaptor.getValue();
+        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+    final ConversionServiceAdapterDescriptor descriptor = descriptorArgumentCaptor.getValue();
     then(descriptor).isNotNull();
     then(descriptor.getFromToMappings()).isEmpty();
   }
@@ -200,8 +200,8 @@ class ConverterMapperProcessorTest {
     then(compileResult).isTrue();
     BDDMockito.then(adapterGenerator)
         .should()
-        .writeConversionServiceBridge(descriptorArgumentCaptor.capture(), any(Writer.class));
-    final ConversionServiceBridgeDescriptor descriptor = descriptorArgumentCaptor.getValue();
+        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+    final ConversionServiceAdapterDescriptor descriptor = descriptorArgumentCaptor.getValue();
     then(descriptor).isNotNull();
     then(descriptor.getFromToMappings())
         .hasSize(1)

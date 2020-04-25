@@ -15,13 +15,13 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.co.kleindelao.mapstruct.spring.example.packagename.CarMapper;
-import uk.co.kleindelao.mapstruct.spring.example.packagename.SeatConfigurationMapper;
+import uk.co.kleindelao.mapstruct.spring.example.noconfig.CarMapper;
+import uk.co.kleindelao.mapstruct.spring.example.noconfig.SeatConfigurationMapper;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
-    classes = {ConversionServiceBridgeIntegrationTest.AdditionalBeanConfiguration.class})
-public class ConversionServiceBridgeIntegrationTest {
+    classes = {ConversionServiceAdapterIntegrationTest.AdditionalBeanConfiguration.class})
+public class ConversionServiceAdapterIntegrationTest {
   private static final String TEST_MAKE = "Volvo";
   private static final CarType TEST_CAR_TYPE = OTHER;
   protected static final int TEST_NUMBER_OF_SEATS = 5;

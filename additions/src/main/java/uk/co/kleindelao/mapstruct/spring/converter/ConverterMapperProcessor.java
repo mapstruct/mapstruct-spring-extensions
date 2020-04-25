@@ -58,23 +58,23 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   @Override
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    final ConversionServiceBridgeDescriptor descriptor = new ConversionServiceBridgeDescriptor();
-    final Pair<String, String> bridgePackageAndClass =
-        getBridgePackageAndClassName(annotations, roundEnv);
-    descriptor.setBridgeClassName(
-        ClassName.get(bridgePackageAndClass.getLeft(), bridgePackageAndClass.getRight()));
+    final ConversionServiceAdapterDescriptor descriptor = new ConversionServiceAdapterDescriptor();
+    final Pair<String, String> adapterPackageAndClass =
+        getAdapterPackageAndClassName(annotations, roundEnv);
+    descriptor.setAdapterClassName(
+        ClassName.get(adapterPackageAndClass.getLeft(), adapterPackageAndClass.getRight()));
     annotations.stream()
         .filter(annotation -> MAPPER.contentEquals(annotation.getQualifiedName()))
         .forEach(
             annotation ->
-                processMapperAnnotation(roundEnv, descriptor, bridgePackageAndClass, annotation));
+                processMapperAnnotation(roundEnv, descriptor, adapterPackageAndClass, annotation));
     return false;
   }
 
   private void processMapperAnnotation(
       final RoundEnvironment roundEnv,
-      final ConversionServiceBridgeDescriptor descriptor,
-      final Pair<String, String> bridgePackageAndClass,
+      final ConversionServiceAdapterDescriptor descriptor,
+      final Pair<String, String> adapterPackageAndClass,
       final TypeElement annotation) {
     final List<Pair<ClassName, ClassName>> fromToMappings =
         roundEnv.getElementsAnnotatedWith(annotation).stream()
@@ -86,7 +86,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
             .map(this::toFromToMapping)
             .collect(toList());
     descriptor.setFromToMappings(fromToMappings);
-    writeBridgeClassFile(descriptor, bridgePackageAndClass);
+    writeAdapterClassFile(descriptor, adapterPackageAndClass);
   }
 
   private Pair<ClassName, ClassName> toFromToMapping(final ExecutableElement convert) {
@@ -117,33 +117,33 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .orElse(null);
   }
 
-  private void writeBridgeClassFile(
-      final ConversionServiceBridgeDescriptor descriptor,
-      final Pair<String, String> bridgePackageAndClass) {
+  private void writeAdapterClassFile(
+      final ConversionServiceAdapterDescriptor descriptor,
+      final Pair<String, String> adapterPackageAndClass) {
     try (final Writer outputWriter =
         processingEnv
             .getFiler()
             .createSourceFile(
-                bridgePackageAndClass.getLeft() + "." + bridgePackageAndClass.getRight())
+                adapterPackageAndClass.getLeft() + "." + adapterPackageAndClass.getRight())
             .openWriter()) {
-      adapterGenerator.writeConversionServiceBridge(descriptor, outputWriter);
+      adapterGenerator.writeConversionServiceAdapter(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv
           .getMessager()
           .printMessage(
               ERROR,
               "Error while opening "
-                  + bridgePackageAndClass.getRight()
+                  + adapterPackageAndClass.getRight()
                   + " output file: "
                   + e.getMessage());
     }
   }
 
-  private Pair<String, String> getBridgePackageAndClassName(
+  private Pair<String, String> getAdapterPackageAndClassName(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     final MutablePair<String, String> packageAndClass =
         MutablePair.of(
-            ConverterMapperProcessor.class.getPackage().getName(), "ConversionServiceBridge");
+            ConverterMapperProcessor.class.getPackage().getName(), "ConversionServiceAdapter");
     for (final TypeElement annotation : annotations) {
       if (SPRING_MAPPER_CONFIG.contentEquals(annotation.getQualifiedName())) {
         roundEnv
@@ -155,15 +155,15 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   }
 
   private void updateFromDeclaration(
-      final Element element, final MutablePair<String, String> bridgePackageAndClass) {
+      final Element element, final MutablePair<String, String> adapterPackageAndClass) {
     final SpringMapperConfig springMapperConfig = element.getAnnotation(SpringMapperConfig.class);
-    bridgePackageAndClass.setLeft(
-        Optional.of(springMapperConfig.conversionServiceBridgePackage())
+    adapterPackageAndClass.setLeft(
+        Optional.of(springMapperConfig.conversionServiceAdapterPackage())
             .filter(StringUtils::isNotBlank)
             .orElse(
                 String.valueOf(
                     processingEnv.getElementUtils().getPackageOf(element).getQualifiedName())));
-    bridgePackageAndClass.setRight(springMapperConfig.conversionServiceBridgeClassName());
+    adapterPackageAndClass.setRight(springMapperConfig.conversionServiceAdapterClassName());
   }
 
   private Optional<? extends TypeMirror> getConverterSupertype(final Element mapper) {

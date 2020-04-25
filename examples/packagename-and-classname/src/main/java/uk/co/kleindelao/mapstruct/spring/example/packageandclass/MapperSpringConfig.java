@@ -2,9 +2,10 @@ package uk.co.kleindelao.mapstruct.spring.example.packageandclass;
 
 import org.mapstruct.MapperConfig;
 import uk.co.kleindelao.mapstruct.spring.SpringMapperConfig;
-import uk.co.kleindelao.mapstruct.spring.example.bridge.MyBridge;
+import uk.co.kleindelao.mapstruct.spring.example.adapter.MyAdapter;
 
-@MapperConfig(componentModel = "spring", uses = MyBridge.class)
-@SpringMapperConfig(conversionServiceBridgePackage="uk.co.kleindelao.mapstruct.spring.example.bridge", conversionServiceBridgeClassName="MyBridge")
+@MapperConfig(componentModel = "spring", uses = MyAdapter.class)
+@SpringMapperConfig(conversionServiceAdapterPackage ="uk.co.kleindelao.mapstruct.spring.example.adapter",
+        conversionServiceAdapterClassName ="MyAdapter")
 public interface MapperSpringConfig {
 }

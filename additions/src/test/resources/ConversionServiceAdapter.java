@@ -12,7 +12,7 @@ import test.CarDto;
         date = "2020-03-29T15:21:34.236Z"
 )
 @Component
-public class ConversionServiceBridge {
+public class ConversionServiceAdapter {
     @Autowired
     private ConversionService conversionService;
 

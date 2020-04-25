@@ -4,16 +4,16 @@ import com.squareup.javapoet.ClassName;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
-public class ConversionServiceBridgeDescriptor {
-    private ClassName bridgeClassName;
+public class ConversionServiceAdapterDescriptor {
+    private ClassName adapterClassName;
     private List<Pair<ClassName, ClassName>> fromToMappings;
 
-    public ClassName getBridgeClassName() {
-        return bridgeClassName;
+    public ClassName getAdapterClassName() {
+        return adapterClassName;
     }
 
-    public void setBridgeClassName(final ClassName bridgeClassName) {
-        this.bridgeClassName = bridgeClassName;
+    public void setAdapterClassName(final ClassName adapterClassName) {
+        this.adapterClassName = adapterClassName;
     }
 
     public List<Pair<ClassName, ClassName>> getFromToMappings() {

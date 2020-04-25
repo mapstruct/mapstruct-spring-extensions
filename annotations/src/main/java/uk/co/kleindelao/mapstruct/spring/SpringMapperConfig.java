@@ -15,19 +15,19 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface SpringMapperConfig {
     /**
-     * The package name for the generated &quot;Bridge&quot; between the MapStruct mappers and Spring's
+     * The package name for the generated Adapter between the MapStruct mappers and Spring's
      * {@link org.springframework.core.convert.ConversionService}. If omitted or empty, the package name will be the
      * same as the one for the annotated type.
      *
-     * @return The package name for the generated &quot;Bridge&quot;.
+     * @return The package name for the generated Adapter.
      */
-    String conversionServiceBridgePackage() default "";
+    String conversionServiceAdapterPackage() default "";
 
     /**
-     * The class name for the generated &quot;Bridge&quot; between the MapStruct mappers and Spring's
+     * The class name for the generated Adapter between the MapStruct mappers and Spring's
      * {@link org.springframework.core.convert.ConversionService}.
      *
-     * @return The class name for the generated &quot;Bridge&quot;.
+     * @return The class name for the generated Adapter.
      */
-    String conversionServiceBridgeClassName() default "ConversionServiceBridge";
+    String conversionServiceAdapterClassName() default "ConversionServiceAdapter";
 }

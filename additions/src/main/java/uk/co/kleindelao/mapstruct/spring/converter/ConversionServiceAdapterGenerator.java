@@ -19,11 +19,11 @@ public class ConversionServiceAdapterGenerator {
     this.clock = clock;
   }
 
-  public void writeConversionServiceBridge(
-      ConversionServiceBridgeDescriptor descriptor, Writer out) {
+  public void writeConversionServiceAdapter(
+          ConversionServiceAdapterDescriptor descriptor, Writer out) {
     try {
       JavaFile.builder(
-              descriptor.getBridgeClassName().packageName(),
+              descriptor.getAdapterClassName().packageName(),
               createConversionServiceTypeSpec(descriptor))
           .build()
           .writeTo(out);
@@ -33,9 +33,9 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private TypeSpec createConversionServiceTypeSpec(
-      final ConversionServiceBridgeDescriptor descriptor) {
+      final ConversionServiceAdapterDescriptor descriptor) {
     final FieldSpec injectedConversionServiceFieldSpec = buildInjectedConversionServiceFieldSpec();
-    return TypeSpec.classBuilder(descriptor.getBridgeClassName())
+    return TypeSpec.classBuilder(descriptor.getAdapterClassName())
         .addModifiers(PUBLIC)
         .addAnnotation(buildGeneratedAnnotationSpec())
         .addAnnotation(ClassName.get("org.springframework.stereotype", "Component"))
@@ -45,7 +45,7 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private static Iterable<MethodSpec> buildMappingMethods(
-      final ConversionServiceBridgeDescriptor descriptor,
+      final ConversionServiceAdapterDescriptor descriptor,
       final FieldSpec injectedConversionServiceFieldSpec) {
     return descriptor.getFromToMappings().stream()
         .map(
