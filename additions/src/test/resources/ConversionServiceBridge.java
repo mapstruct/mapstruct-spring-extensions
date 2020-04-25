@@ -8,7 +8,7 @@ import test.Car;
 import test.CarDto;
 
 @Generated(
-        value = "uk.co.kleindelao.mapstruct.spring.converter.ConversionServiceBridgeGenerator",
+        value = "uk.co.kleindelao.mapstruct.spring.converter.ConversionServiceAdapterGenerator",
         date = "2020-03-29T15:21:34.236Z"
 )
 @Component
