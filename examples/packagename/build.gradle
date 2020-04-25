@@ -1,0 +1,13 @@
+dependencies {
+    annotationProcessor project(":additions")
+    implementation project(":annotations")
+    implementation project(":examples:model")
+    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
+    compileOnly 'javax.annotation:jsr250-api:1.0'
+    implementation 'org.mapstruct:mapstruct:1.4.0-SNAPSHOT'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.0-SNAPSHOT'
+    implementation 'org.springframework:spring-core:5.0.0.RELEASE'
+    implementation 'org.springframework:spring-context:5.0.0.RELEASE'
+    testImplementation 'org.springframework:spring-test:5.0.0.RELEASE'
+    testImplementation 'org.assertj:assertj-core:3.15.0'
+}

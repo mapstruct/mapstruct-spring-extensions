@@ -1,4 +1,10 @@
 rootProject.name = 'mapstruct-spring-additions-aggregator'
 
+include "annotations"
 include "additions"
-include "tests"
+include "examples"
+include "examples:model"
+include "examples:noconfig"
+include "examples:packagename"
+include "examples:classname"
+include "examples:packagename-and-classname"
