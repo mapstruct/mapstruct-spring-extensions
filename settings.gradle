@@ -1,7 +1,7 @@
-rootProject.name = 'mapstruct-spring-additions-aggregator'
+rootProject.name = 'mapstruct-spring-extensions-aggregator'
 
 include "annotations"
-include "additions"
+include "extensions"
 include "examples"
 include "examples:model"
 include "examples:noconfig"

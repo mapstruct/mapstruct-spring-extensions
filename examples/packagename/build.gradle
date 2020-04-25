@@ -1,5 +1,5 @@
 dependencies {
-    annotationProcessor project(":additions")
+    annotationProcessor project(":extensions")
     implementation project(":annotations")
     implementation project(":examples:model")
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
