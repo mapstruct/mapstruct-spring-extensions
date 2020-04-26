@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a class or interface as configuration source for the Spring additions. There can be only <em>one</em>
+ * Marks a class or interface as configuration source for the Spring extension. There can be only <em>one</em>
  * annotated type in each compiled module.
  *
  * @author Raimund Klein

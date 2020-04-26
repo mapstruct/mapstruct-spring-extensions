@@ -1,0 +1,66 @@
+apply plugin: "maven-publish"
+apply plugin: "signing"
+
+dependencies {
+    compileOnly'org.springframework:spring-core:5.0.0.RELEASE'
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Raimund Klein'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://git@github.com:mapstruct/mapstruct-spring-extensions.git'
+                    developerConnection = 'scm:git:ssh://git@github.com:mapstruct/mapstruct-spring-extensions.git'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            // change URLs to point to your repos, e.g. http://my.org/repo
+            def releasesRepoUrl = "$buildDir/repos/releases"
+            def snapshotsRepoUrl = "$buildDir/repos/snapshots"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+    options.links = [
+        "https://docs.oracle.com/javase/8/docs/api/",
+        "https://docs.spring.io/spring/docs/5.0.0.RELEASE/javadoc-api/"
+    ]
+}

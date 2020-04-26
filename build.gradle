@@ -10,6 +10,8 @@ plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
     id 'jacoco'
+    id 'maven-publish'
+    id 'signing'
 }
 
 group = 'org.mapstruct.extensions'
