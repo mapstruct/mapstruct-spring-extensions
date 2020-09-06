@@ -3,7 +3,7 @@ apply plugin: "signing"
 
 dependencies {
     implementation project(":annotations")
-    implementation 'org.mapstruct:mapstruct:1.4.0-SNAPSHOT'
+    implementation 'org.mapstruct:mapstruct:1.4.0.CR1'
     implementation 'com.squareup:javapoet:1.12.1'
     implementation 'org.apache.commons:commons-lang3:3.10'
 
@@ -44,9 +44,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git://git@github.com:mapstruct/mapstruct-spring-extensions.git'
-                    developerConnection = 'scm:git:ssh://git@github.com:mapstruct/mapstruct-spring-extensions.git'
-//                        url = 'http://example.com/my-library/'
+                    connection = 'scm:git:git://github.com/mapstruct/mapstruct-spring-extensions.git'
+                    developerConnection = 'scm:git:git://github.com/mapstruct/mapstruct-spring-extensions.git'
+                    url = 'https://github.com/mapstruct/mapstruct-spring-extensions'
                 }
             }
         }

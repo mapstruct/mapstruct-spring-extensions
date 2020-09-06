@@ -2,7 +2,7 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
-    compileOnly'org.springframework:spring-core:5.0.0.RELEASE'
+    compileOnly 'org.springframework:spring-core:5.0.0.RELEASE'
 }
 
 java {
@@ -31,7 +31,9 @@ publishing {
                 }
                 developers {
                     developer {
+                        id = 'RayBan'
                         name = 'Raimund Klein'
+                        email = 'raimund.klein@gmx.de'
                     }
                 }
                 scm {
@@ -52,6 +54,9 @@ publishing {
 }
 
 signing {
+    required { gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+    useGpgCmd()
     sign publishing.publications.mavenJava
 }
 
@@ -60,7 +65,6 @@ javadoc {
         options.addBooleanOption('html5', true)
     }
     options.links = [
-        "https://docs.oracle.com/javase/8/docs/api/",
         "https://docs.spring.io/spring/docs/5.0.0.RELEASE/javadoc-api/"
     ]
 }
