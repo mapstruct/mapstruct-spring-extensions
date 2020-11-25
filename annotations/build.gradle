@@ -13,6 +13,7 @@ java {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            artifactId = 'mapstruct-spring-annotations'
             from components.java
             versionMapping {
                 usage('java-api') {

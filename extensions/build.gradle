@@ -22,6 +22,7 @@ java {
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            artifactId = 'mapstruct-spring-extensions'
             from components.java
             versionMapping {
                 usage('java-api') {
@@ -62,6 +63,7 @@ publishing {
 }
 
 signing {
+    useGpgCmd()
     sign publishing.publications.mavenJava
 }
 

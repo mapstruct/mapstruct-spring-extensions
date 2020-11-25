@@ -14,9 +14,6 @@ plugins {
     id 'signing'
 }
 
-group = 'org.mapstruct.extensions'
-version = '0.0.1'
-
 allprojects {
     repositories {
         jcenter()
@@ -27,6 +24,9 @@ allprojects {
 subprojects {
     apply plugin: "java-library"
     apply plugin: "jacoco"
+
+    group = 'org.mapstruct.extensions'
+    version = '0.0.1'
 
     dependencies {
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
