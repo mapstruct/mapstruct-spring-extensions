@@ -55,8 +55,6 @@ publishing {
 }
 
 signing {
-    required { gradle.taskGraph.hasTask("uploadArchives") }
-    sign configurations.archives
     useGpgCmd()
     sign publishing.publications.mavenJava
 }
