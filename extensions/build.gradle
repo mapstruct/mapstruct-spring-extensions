@@ -6,7 +6,7 @@ dependencies {
     implementation 'com.squareup:javapoet:1.12.1'
     implementation 'org.apache.commons:commons-lang3:3.10'
 
-    testImplementation 'org.mapstruct:mapstruct:1.4.0.CR1'
+    testImplementation 'org.mapstruct:mapstruct:1.4.0.Final'
     testImplementation 'org.assertj:assertj-core:3.15.0'
     testImplementation 'commons-io:commons-io:2.6'
     testImplementation 'com.google.guava:guava:28.2-jre'
