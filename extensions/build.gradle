@@ -33,6 +33,11 @@ publishing {
                 }
             }
             pom {
+                name = 'MapStruct Spring Extensions'
+                description = 'Spring-specific MapStruct extensions'
+                url = 'https://mapstruct.org/'
+                packaging = 'jar'
+
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -54,7 +59,6 @@ publishing {
     }
     repositories {
         maven {
-            // change URLs to point to your repos, e.g. http://my.org/repo
             def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
             def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl

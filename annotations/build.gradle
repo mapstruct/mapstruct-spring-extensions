@@ -24,6 +24,11 @@ publishing {
                 }
             }
             pom {
+                name = 'MapStruct Spring Annotations'
+                description = 'Spring-specific annotations for MapStruct'
+                url = 'https://mapstruct.org/'
+                packaging = 'jar'
+
                 licenses {
                     license {
                         name = 'The Apache License, Version 2.0'
@@ -40,13 +45,13 @@ publishing {
                 scm {
                     connection = 'scm:git:git://git@github.com:mapstruct/mapstruct-spring-extensions.git'
                     developerConnection = 'scm:git:ssh://git@github.com:mapstruct/mapstruct-spring-extensions.git'
+                    url = 'https://github.com/mapstruct/mapstruct-spring-extensions'
                 }
             }
         }
     }
     repositories {
         maven {
-            // change URLs to point to your repos, e.g. http://my.org/repo
             def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
             def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
             url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
