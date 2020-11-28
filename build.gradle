@@ -10,24 +10,23 @@ plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
     id 'jacoco'
+    id 'maven-publish'
+    id 'signing'
 }
-
-group = 'org.mapstruct.extensions'
-version = '0.0.1'
 
 allprojects {
     repositories {
         jcenter()
         mavenCentral()
-        maven {
-            url "https://oss.sonatype.org/content/repositories/snapshots"
-        }
     }
 }
 
 subprojects {
     apply plugin: "java-library"
     apply plugin: "jacoco"
+
+    group = 'org.mapstruct.extensions.spring'
+    version = '0.0.1-SNAPSHOT'
 
     dependencies {
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.1'
@@ -59,6 +58,6 @@ subprojects {
 }
 
 wrapper {
-    gradleVersion = '6.3'
+    gradleVersion = '6.7.1'
 }
 
