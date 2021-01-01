@@ -1,0 +1,13 @@
+plugins {
+    id 'org.asciidoctor.jvm.convert' version '3.2.0'
+}
+
+asciidoctor {
+    baseDirFollowsSourceDir()
+    attributes 'source-highlighter': 'coderay',
+                'mapstructSpringExtensionsVersion': "${project.version}"
+
+    sources {
+        include 'mapstruct-spring-extensions-reference-guide.asciidoc'
+    }
+}

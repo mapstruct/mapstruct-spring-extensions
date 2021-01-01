@@ -1,0 +1,172 @@
+[[setup]]
+== Set up
+
+MapStruct Spring Extensions is a Java annotation processor based on http://www.jcp.org/en/jsr/detail?id=269[JSR 269] and as such can be used within command line builds (javac, Ant, Maven etc.) as well as from within your IDE. Also, you will need MapStruct itself (at least version `1.4.0.Final`) in your project.
+
+It comprises the following artifacts:
+
+* _org.mapstruct.extensions.spring:mapstruct-spring-annotations_: contains the added annotations such as `@SpringMapperConfig`
+* _org.mapstruct.extensions.spring:mapstruct-spring-extensions_: contains the annotation processor which generates Spring components
+
+=== Apache Maven
+
+For Maven based projects add the following to your POM file in order to use MapStruct Spring Extensions:
+
+.Maven configuration
+====
+[source, xml, linenums]
+[subs="verbatim,attributes"]
+----
+...
+<properties>
+    <org.mapstruct.extensions.spring.version>{mapstructSpringExtensionsVersion}</org.mapstruct.extensions.spring.version>
+</properties>
+...
+<dependencies>
+    <dependency>
+        <groupId>org.mapstruct.extensions.spring</groupId>
+        <artifactId>mapstruct-spring-annotations</artifactId>
+        <version>${org.mapstruct.extensions.spring.version}</version>
+    </dependency>
+</dependencies>
+...
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.1</version>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+                <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.mapstruct.extensions.spring</groupId>
+                        <artifactId>mapstruct-spring-extensions</artifactId>
+                        <version>${org.mapstruct.extensions.spring.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+...
+----
+====
+
+[TIP]
+====
+If you are working with the Eclipse IDE, make sure to have a current version of the http://www.eclipse.org/m2e/[M2E plug-in].
+When importing a Maven project configured as shown above, it will set up the MapStruct Spring Extensions annotation processor so it runs right in the IDE, whenever you save a mapper type extending a Spring converter.
+Neat, isn't it?
+
+To double check that everything is working as expected, go to your project's properties and select "Java Compiler" -> "Annotation Processing" -> "Factory Path".
+The MapStruct Spring Extensions JAR should be listed and enabled there.
+Any processor options configured via the compiler plug-in (see below) should be listed under "Java Compiler" -> "Annotation Processing".
+
+If the processor is not kicking in, check that the configuration of annotation processors through M2E is enabled.
+To do so, go to "Preferences" -> "Maven" -> "Annotation Processing" and select "Automatically configure JDT APT".
+Alternatively, specify the following in the `properties` section of your POM file: `<m2e.apt.activation>jdt_apt</m2e.apt.activation>`.
+
+Also make sure that your project is using Java 1.8 or later (project properties -> "Java Compiler" -> "Compile Compliance Level").
+It will not work with older versions.
+====
+
+=== Gradle
+
+Add the following to your Gradle build file in order to enable MapStruct Spring Extensions:
+
+.Gradle configuration (5.2 and later)
+====
+[source, groovy, linenums]
+[subs="verbatim,attributes"]
+----
+...
+
+dependencies {
+    ...
+    implementation "org.mapstruct.extensions.spring:mapstruct-spring-annotations:${mapstructSpringExtensionsVersion}"
+    annotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:${mapstructSpringExtensionsVersion}"
+
+    // If you are using MapStruct Spring Extensions in test code
+    testAnnotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:${mapstructSpringExtensionsVersion}"
+}
+...
+----
+====
+.Gradle configuration (3.4 - 5.1)
+====
+[source, groovy, linenums]
+[subs="verbatim,attributes"]
+----
+...
+plugins {
+    ...
+    id 'net.ltgt.apt' version '0.20'
+}
+
+// You can integrate with your IDEs.
+// See more details: https://github.com/tbroyer/gradle-apt-plugin#usage-with-ides
+apply plugin: 'net.ltgt.apt-idea'
+apply plugin: 'net.ltgt.apt-eclipse'
+
+dependencies {
+    ...
+    implementation "org.mapstruct.extensions.spring:mapstruct-spring-annotations:${mapstructSpringExtensionsVersion}"
+    annotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:${mapstructSpringExtensionsVersion}"
+
+    // If you are using MapStruct Spring Extensions in test code
+    testAnnotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:${mapstructSpringExtensionsVersion}"
+}
+...
+----
+====
+.Gradle (3.3 and older)
+====
+[source, groovy, linenums]
+[subs="verbatim,attributes"]
+----
+...
+plugins {
+    ...
+    id 'net.ltgt.apt' version '0.20'
+}
+
+// You can integrate with your IDEs.
+// See more details: https://github.com/tbroyer/gradle-apt-plugin#usage-with-ides
+apply plugin: 'net.ltgt.apt-idea'
+apply plugin: 'net.ltgt.apt-eclipse'
+
+dependencies {
+    ...
+    compile "org.mapstruct.extensions.spring:mapstruct-spring-annotations:${mapstructSpringExtensionsVersion}"
+    annotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:${mapstructSpringExtensionsVersion}"
+
+    // If you are using MapStruct Spring Extensions in test code
+    testAnnotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:${mapstructSpringExtensionsVersion}"
+}
+...
+----
+====
+
+
+=== Apache Ant
+
+Add the `javac` task configured as follows to your _build.xml_ file in order to enable MapStruct Spring Extensions in your Ant-based project. Adjust the paths as required for your project layout.
+
+.Ant configuration
+====
+[source, xml, linenums]
+[subs="verbatim,attributes"]
+----
+...
+<javac
+    srcdir="src/main/java"
+    destdir="target/classes"
+    classpath="path/to/mapstruct-spring-annotations{mapstructSpringExtensionsVersion}.jar">
+    <compilerarg line="-processorpath path/to/mapstruct-spring-extensions-{mapstructSpringExtensionsVersion}.jar"/>
+    <compilerarg line="-s target/generated-sources"/>
+</javac>
+...
+----
+====
