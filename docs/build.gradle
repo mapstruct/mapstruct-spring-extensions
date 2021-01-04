@@ -5,7 +5,8 @@ plugins {
 asciidoctor {
     baseDirFollowsSourceDir()
     attributes 'source-highlighter': 'coderay',
-                'mapstructSpringExtensionsVersion': "${project.version}"
+               'icons': 'font',
+               'mapstructSpringExtensionsVersion': "${project.version}"
 
     sources {
         include 'mapstruct-spring-extensions-reference-guide.asciidoc'
