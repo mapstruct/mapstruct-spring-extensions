@@ -4,12 +4,16 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.*;
 
 import com.squareup.javapoet.*;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConversionServiceAdapterGenerator {
   private final Clock clock;
@@ -33,7 +37,7 @@ public class ConversionServiceAdapterGenerator {
 
   private TypeSpec createConversionServiceTypeSpec(
       final ConversionServiceAdapterDescriptor descriptor) {
-    final FieldSpec injectedConversionServiceFieldSpec = buildInjectedConversionServiceFieldSpec();
+    final FieldSpec injectedConversionServiceFieldSpec = buildInjectedConversionServiceFieldSpec(descriptor);
     return TypeSpec.classBuilder(descriptor.getAdapterClassName())
         .addModifiers(PUBLIC)
         .addAnnotation(buildGeneratedAnnotationSpec())
@@ -73,10 +77,21 @@ public class ConversionServiceAdapterGenerator {
     return ParameterSpec.builder(sourceClassName, "source", FINAL).build();
   }
 
-  private static FieldSpec buildInjectedConversionServiceFieldSpec() {
+  private static FieldSpec buildInjectedConversionServiceFieldSpec(ConversionServiceAdapterDescriptor descriptor) {
+    List<AnnotationSpec> annotations = new ArrayList<>();
+    annotations.add(AnnotationSpec.builder(ClassName
+            .get("org.springframework.beans.factory.annotation", "Autowired"))
+            .build());
+    if (StringUtils.isNotEmpty(descriptor.getConversionServiceBeanName())) {
+      annotations.add(AnnotationSpec
+              .builder(ClassName.get("org.springframework.beans.factory.annotation", "Qualifier"))
+              .addMember("value", "$S", descriptor.getConversionServiceBeanName())
+              .build());
+    }
+
     return FieldSpec.builder(ClassName.get("org.springframework.core.convert","ConversionService"),
             "conversionService", PRIVATE)
-        .addAnnotation(ClassName.get("org.springframework.beans.factory.annotation", "Autowired"))
+            .addAnnotations(annotations)
         .build();
   }
 

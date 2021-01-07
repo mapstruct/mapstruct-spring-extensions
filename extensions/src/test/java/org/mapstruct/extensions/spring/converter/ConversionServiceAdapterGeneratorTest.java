@@ -42,4 +42,25 @@ class ConversionServiceAdapterGeneratorTest {
     then(outputWriter.toString())
         .isEqualToIgnoringWhitespace(resourceToString("/ConversionServiceAdapter.java", UTF_8));
   }
+
+  @Test
+  void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
+    // Given
+    final ConversionServiceAdapterDescriptor descriptor = new ConversionServiceAdapterDescriptor();
+    descriptor.setAdapterClassName(
+            ClassName.get(
+                    ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
+                    "ConversionServiceAdapter"));
+    descriptor.setConversionServiceBeanName("myConversionService");
+    descriptor.setFromToMappings(
+            singletonList(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto"))));
+    final StringWriter outputWriter = new StringWriter();
+
+    // When
+    generator.writeConversionServiceAdapter(descriptor, outputWriter);
+
+    // Then
+    then(outputWriter.toString())
+            .isEqualToIgnoringWhitespace(resourceToString("/ConversionServiceAdapterCustomBean.java", UTF_8));
+  }
 }

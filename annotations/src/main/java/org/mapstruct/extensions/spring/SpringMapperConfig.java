@@ -30,4 +30,11 @@ public @interface SpringMapperConfig {
      * @return The class name for the generated Adapter.
      */
     String conversionServiceAdapterClassName() default "ConversionServiceAdapter";
+
+    /**
+     * The bean name for the Spring {@link org.springframework.core.convert.ConversionService} to use.
+     *
+     * @return The bean name for the Spring {@link org.springframework.core.convert.ConversionService}.
+     */
+    String conversionServiceBeanName() default "";
 }
