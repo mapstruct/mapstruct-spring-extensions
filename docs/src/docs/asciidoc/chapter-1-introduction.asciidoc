@@ -1,0 +1,8 @@
+[[introduction]]
+== Introduction
+
+The MapStruct Spring Extensions are a Java http://docs.oracle.com/javase/6/docs/technotes/guides/apt/index.html[annotation processor] extending the well known https://mapstruct.org/[MapStruct project] with features specific to the https://spring.io/[Spring Framework].
+
+All you have to do is to define your MapStruct mapper to extend Spring's https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#core-convert-Converter-API[Converter interface]. During compilation, the extensions will generate an adapter which allows the standard MapStruct mappers to use Spring's https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#core-convert-ConversionService-API[ConversionService].
+
+This enables the developer to define MapStruct mappers with only the `ConversionService` in their `uses` attribute rather than having to import every single Mapper individually, thus allowing for looser coupling between Mappers.
