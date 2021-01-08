@@ -1,0 +1,99 @@
+[[mapperAsConverter]]
+== Mappers as Converters
+
+MapStruct Mappers nicely match Spring's https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#core-convert-Converter-API[Converter] idea:
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+@Mapper
+public interface CarMapper extends Converter<Car, CarDto> {
+    @Mapping(target = "seats", source = "seatConfiguration")
+    CarDto convert(Car car);
+}
+----
+====
+
+This allows using the Mapper indirectly via the `ConversionService`:
+
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+...
+    @Autowired
+    private ConversionService conversionService;
+...
+    Car car = ...;
+    CarDto carDto = conversionService.convert(car, CarDto.class);
+----
+====
+
+All this can be achieved already with MapStruct's core functionality. However, when a Mapper wants to https://mapstruct.org/documentation/stable/reference/html/#invoking-other-mappers[invoke] another one, it can't take the route via the `ConversionService`, because the latter's `convert` method does not match the signature that MapStruct expects for a mapping method. Thus, the developer still has to add every invoked Mapper to the invoking Mapper's `uses` element. This creates (aside from a potentially long list) a tight coupling between Mappers that the `ConversionService` wants to avoid.
+
+This is where MapStruct Spring Extensions can help. Including the two artifacts in your build will generate an Adapter class that _can_ be used by an invoking Mapper. Let's say that the above CarMapper is accompanied by a SeatConfigurationMapper:
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+@Mapper
+public interface SeatConfigurationMapper extends Converter<SeatConfiguration, SeatConfigurationDto> {
+    @Mapping(target = "seatCount", source = "numberOfSeats")
+    @Mapping(target = "material", source = "seatMaterial")
+    SeatConfigurationDto convert(SeatConfiguration seatConfiguration);
+}
+----
+====
+
+The generated Adapter class will look like this:
+
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+@Component
+public class ConversionServiceAdapter {
+  @Autowired
+  private ConversionService conversionService;
+
+  public CarDto mapCarToCarDto(final Car source) {
+    return conversionService.convert(source, CarDto.class);
+  }
+
+  public SeatConfigurationDto mapSeatConfigurationToSeatConfigurationDto(final SeatConfiguration source) {
+    return conversionService.convert(source, SeatConfigurationDto.class);
+  }
+}
+----
+====
+
+Since this class' methods match the signature that MapStruct expects, we can now add it to the CarMapper:
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+@Mapper(uses = ConversionServiceAdapter.class)
+public interface CarMapper extends Converter<Car, CarDto> {
+    @Mapping(target = "seats", source = "seatConfiguration")
+    CarDto convert(Car car);
+}
+----
+====
+
+[[mappersAsConvertersCustomNames]]
+=== Custom Names
+By default, the generated class will be located in the package `org.mapstruct.extensions.spring.converter` and receive the name `ConversionServiceAdapter`. Typically, you will want to change these names, most often at least the package. This can be accomplished by adding the `SpringMapperConfig` annotation on any class within your regular source code. One natural candidate would be your https://mapstruct.org/documentation/stable/reference/html/#shared-configurations[shared configuration] if you use this:
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+import org.mapstruct.MapperConfig;
+import org.mapstruct.extensions.spring.SpringMapperConfig;
+import org.mapstruct.extensions.spring.example.adapter.MyAdapter;
+
+@MapperConfig(componentModel = "spring", uses = MyAdapter.class)
+@SpringMapperConfig(conversionServiceAdapterPackage ="org.mapstruct.extensions.spring.example.adapter", conversionServiceAdapterClassName ="MyAdapter")
+public interface MapperSpringConfig {
+}
+----
+====
