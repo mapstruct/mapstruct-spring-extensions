@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -63,6 +64,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         getAdapterPackageAndClassName(annotations, roundEnv);
     descriptor.setAdapterClassName(
         ClassName.get(adapterPackageAndClass.getLeft(), adapterPackageAndClass.getRight()));
+    descriptor.setConversionServiceBeanName(getConversionServiceName(annotations, roundEnv));
     annotations.stream()
         .filter(annotation -> MAPPER.contentEquals(annotation.getQualifiedName()))
         .forEach(
@@ -164,6 +166,23 @@ public class ConverterMapperProcessor extends AbstractProcessor {
                 String.valueOf(
                     processingEnv.getElementUtils().getPackageOf(element).getQualifiedName())));
     adapterPackageAndClass.setRight(springMapperConfig.conversionServiceAdapterClassName());
+  }
+
+  private String getConversionServiceName(
+          final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    AtomicReference<String> beanName = new AtomicReference<>();
+    for (final TypeElement annotation : annotations) {
+      if (SPRING_MAPPER_CONFIG.contentEquals(annotation.getQualifiedName())) {
+        roundEnv
+                .getElementsAnnotatedWith(annotation)
+                .stream().findFirst()
+                .ifPresent(element -> {
+                  final SpringMapperConfig springMapperConfig = element.getAnnotation(SpringMapperConfig.class);
+                  beanName.set(springMapperConfig.conversionServiceBeanName());
+                });
+      }
+    }
+    return beanName.get();
   }
 
   private Optional<? extends TypeMirror> getConverterSupertype(final Element mapper) {

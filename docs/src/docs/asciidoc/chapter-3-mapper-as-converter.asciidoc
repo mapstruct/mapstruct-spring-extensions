@@ -97,3 +97,19 @@ public interface MapperSpringConfig {
 }
 ----
 ====
+[[customConversionService]]
+=== Specifying The Conversion Service Bean Name
+If your application has multiple `ConversionService` beans, you will need to specify the bean name. The `SpringMapperConfig` allows you to specify it using the `conversionServiceBeanName` property.
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+import org.mapstruct.MapperConfig;
+import org.mapstruct.extensions.spring.SpringMapperConfig;
+
+@MapperConfig(componentModel = "spring", uses = ConversionServiceAdapter.class)
+@SpringMapperConfig(conversionServiceBeanName = "myConversionService")
+public interface MapperSpringConfig {
+}
+----
+====

@@ -84,7 +84,18 @@ class ConverterMapperProcessorTest {
                 .build()
                 .toJavaFileObject(),
             JavaFile.builder(
+                        "org.springframework.beans.factory.annotation",
+                        buildAnnotationWithValueTypeSpec("Qualifier"))
+                        .skipJavaLangImports(true)
+                        .build()
+                        .toJavaFileObject(),
+            JavaFile.builder(
                     "org.springframework.stereotype", buildSimpleAnnotationTypeSpec("Component"))
+                .skipJavaLangImports(true)
+                .build()
+                .toJavaFileObject(),
+            JavaFile.builder(
+                    PACKAGE_NAME, buildConfigClass("MyMappingConfig"))
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject());
@@ -92,6 +103,18 @@ class ConverterMapperProcessorTest {
 
   private static TypeSpec buildSimpleAnnotationTypeSpec(final String anotationName) {
     return TypeSpec.annotationBuilder(anotationName).addModifiers(PUBLIC).build();
+  }
+
+  private static TypeSpec buildAnnotationWithValueTypeSpec(final String anotationName) {
+    return TypeSpec
+            .annotationBuilder(anotationName)
+            .addMethod(
+                    MethodSpec.methodBuilder("value")
+                            .returns(String.class)
+                            .addModifiers(PUBLIC, ABSTRACT)
+                            .build())
+            .addModifiers(PUBLIC)
+            .build();
   }
 
   private static TypeSpec buildGeneratedAnnotationTypeSpec() {
@@ -127,6 +150,16 @@ class ConverterMapperProcessorTest {
                 .addStatement("this.$N = $N", makeField, makeParameter)
                 .build())
         .build();
+  }
+
+  private static TypeSpec buildConfigClass(final String className) {
+    return TypeSpec.interfaceBuilder(className)
+            .addModifiers(PUBLIC)
+            .addAnnotation(AnnotationSpec.builder(
+                    ClassName.get("org.mapstruct.extensions.spring", "SpringMapperConfig"))
+                    .addMember("conversionServiceBeanName", "$S", "myConversionService")
+                    .build())
+            .build();
   }
 
   @Test
