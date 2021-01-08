@@ -53,18 +53,21 @@ The generated Adapter class will look like this:
 ----
 @Component
 public class ConversionServiceAdapter {
-  @Autowired
-  private ConversionService conversionService;
+  private final ConversionService conversionService;
+
+  public ConversionServiceAdapter(final ConversionService conversionService) {
+    this.conversionService = conversionService;
+  }
 
   public CarDto mapCarToCarDto(final Car source) {
     return conversionService.convert(source, CarDto.class);
   }
 
-  public SeatConfigurationDto mapSeatConfigurationToSeatConfigurationDto(final SeatConfiguration source) {
+  public SeatConfigurationDto mapSeatConfigurationToSeatConfigurationDto(
+      final SeatConfiguration source) {
     return conversionService.convert(source, SeatConfigurationDto.class);
   }
-}
-----
+}----
 ====
 
 Since this class' methods match the signature that MapStruct expects, we can now add it to the CarMapper:
@@ -96,6 +99,8 @@ import org.mapstruct.extensions.spring.example.adapter.MyAdapter;
 public interface MapperSpringConfig {
 }
 ----
+
+Note: If you do _not_ specify the `conversionServiceAdapterPackage` element, the generated Adapter class will reside in the same package as the annotated Config.
 ====
 [[customConversionService]]
 === Specifying The Conversion Service Bean Name
