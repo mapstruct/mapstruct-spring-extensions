@@ -33,9 +33,10 @@ subprojects {
         testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.1'
     }
 
-    compileJava {
-        sourceCompatibility '1.8'
-        targetCompatibility '1.8'
+    java {
+        toolchain {
+            languageVersion.set(JavaLanguageVersion.of(8))
+        }
     }
 
     test {
@@ -58,6 +59,6 @@ subprojects {
 }
 
 wrapper {
-    gradleVersion = '6.7.1'
+    gradleVersion = '6.8'
 }
 

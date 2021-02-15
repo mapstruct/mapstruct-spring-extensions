@@ -73,6 +73,14 @@ class ConverterMapperProcessorTest {
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject(),
+            JavaFile.builder(PACKAGE_NAME, buildModelClassTypeSpec("Wheel"))
+                .skipJavaLangImports(true)
+                .build()
+                .toJavaFileObject(),
+            JavaFile.builder(PACKAGE_NAME, buildModelClassTypeSpec("WheelDto"))
+                .skipJavaLangImports(true)
+                .build()
+                .toJavaFileObject(),
             JavaFile.builder("javax.annotation", buildGeneratedAnnotationTypeSpec())
                 .skipJavaLangImports(true)
                 .build()
@@ -84,18 +92,17 @@ class ConverterMapperProcessorTest {
                 .build()
                 .toJavaFileObject(),
             JavaFile.builder(
-                        "org.springframework.beans.factory.annotation",
-                        buildAnnotationWithValueTypeSpec("Qualifier"))
-                        .skipJavaLangImports(true)
-                        .build()
-                        .toJavaFileObject(),
+                    "org.springframework.beans.factory.annotation",
+                    buildAnnotationWithValueTypeSpec("Qualifier"))
+                .skipJavaLangImports(true)
+                .build()
+                .toJavaFileObject(),
             JavaFile.builder(
                     "org.springframework.stereotype", buildSimpleAnnotationTypeSpec("Component"))
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject(),
-            JavaFile.builder(
-                    PACKAGE_NAME, buildConfigClass("MyMappingConfig"))
+            JavaFile.builder(PACKAGE_NAME, buildConfigClass("MyMappingConfig"))
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject());
@@ -106,15 +113,14 @@ class ConverterMapperProcessorTest {
   }
 
   private static TypeSpec buildAnnotationWithValueTypeSpec(final String anotationName) {
-    return TypeSpec
-            .annotationBuilder(anotationName)
-            .addMethod(
-                    MethodSpec.methodBuilder("value")
-                            .returns(String.class)
-                            .addModifiers(PUBLIC, ABSTRACT)
-                            .build())
-            .addModifiers(PUBLIC)
-            .build();
+    return TypeSpec.annotationBuilder(anotationName)
+        .addMethod(
+            MethodSpec.methodBuilder("value")
+                .returns(String.class)
+                .addModifiers(PUBLIC, ABSTRACT)
+                .build())
+        .addModifiers(PUBLIC)
+        .build();
   }
 
   private static TypeSpec buildGeneratedAnnotationTypeSpec() {
@@ -136,7 +142,7 @@ class ConverterMapperProcessorTest {
   private static TypeSpec buildModelClassTypeSpec(final String className) {
     final FieldSpec makeField = FieldSpec.builder(String.class, "make", PRIVATE).build();
     final ParameterSpec makeParameter = ParameterSpec.builder(String.class, "make", FINAL).build();
-    return TypeSpec.classBuilder(className)
+    return TypeSpec.classBuilder(className).addTypeVariable(TypeVariableName.get("W", ))
         .addModifiers(PUBLIC)
         .addField(makeField)
         .addMethod(
@@ -154,12 +160,13 @@ class ConverterMapperProcessorTest {
 
   private static TypeSpec buildConfigClass(final String className) {
     return TypeSpec.interfaceBuilder(className)
-            .addModifiers(PUBLIC)
-            .addAnnotation(AnnotationSpec.builder(
+        .addModifiers(PUBLIC)
+        .addAnnotation(
+            AnnotationSpec.builder(
                     ClassName.get("org.mapstruct.extensions.spring", "SpringMapperConfig"))
-                    .addMember("conversionServiceBeanName", "$S", "myConversionService")
-                    .build())
-            .build();
+                .addMember("conversionServiceBeanName", "$S", "myConversionService")
+                .build())
+        .build();
   }
 
   @Test
@@ -167,6 +174,34 @@ class ConverterMapperProcessorTest {
     // Given
     final JavaFile mapperFile =
         JavaFile.builder(PACKAGE_NAME, converterMapperBuilder().build()).build();
+
+    // When
+    final boolean compileResult = compile(mapperFile.toJavaFileObject());
+
+    // Then
+    then(compileResult).isTrue();
+  }
+
+  @Test
+  void shouldCompileConverterMapperWithGenericSourceType() throws IOException {
+    // Given
+    final JavaFile mapperFile =
+        JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericSourceTypeBuilder().build())
+            .build();
+
+    // When
+    final boolean compileResult = compile(mapperFile.toJavaFileObject());
+
+    // Then
+    then(compileResult).isTrue();
+  }
+
+  @Test
+  void shouldCompileConverterMapperWithGenericTargetType() throws IOException {
+    // Given
+    final JavaFile mapperFile =
+        JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericTargetTypeBuilder().build())
+            .build();
 
     // When
     final boolean compileResult = compile(mapperFile.toJavaFileObject());
