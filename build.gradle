@@ -26,7 +26,7 @@ subprojects {
     apply plugin: "jacoco"
 
     group = 'org.mapstruct.extensions.spring'
-    version = '0.0.2-SNAPSHOT'
+    version = '0.0.2'
 
     dependencies {
         testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
