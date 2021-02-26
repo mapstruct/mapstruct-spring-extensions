@@ -70,9 +70,6 @@ signing {
 }
 
 javadoc {
-    if(JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-    }
     options.links = [
         "https://docs.spring.io/spring/docs/5.0.0.RELEASE/javadoc-api/"
     ]
