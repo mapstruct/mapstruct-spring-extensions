@@ -66,6 +66,17 @@ public class ConversionServiceAdapterGenerator {
                 .build();
     }
 
+    private static String simpleName(final TypeName typeName) {
+        return rawType(typeName).simpleName();
+    }
+
+    private static ClassName rawType(final TypeName typeName) {
+        if (typeName instanceof ParameterizedTypeName) {
+            return ((ParameterizedTypeName)typeName).rawType;
+        }
+        return (ClassName) typeName;
+    }
+
     private static Iterable<MethodSpec> buildMappingMethods(
             final ConversionServiceAdapterDescriptor descriptor,
             final FieldSpec injectedConversionServiceFieldSpec) {
@@ -76,9 +87,9 @@ public class ConversionServiceAdapterGenerator {
                                     buildSourceParameterSpec(sourceTargetPair.getLeft());
                             return MethodSpec.methodBuilder(
                                     "map"
-                                            + sourceTargetPair.getLeft().simpleName()
+                                            + simpleName(sourceTargetPair.getLeft())
                                             + "To"
-                                            + sourceTargetPair.getRight().simpleName())
+                                            + simpleName(sourceTargetPair.getRight()))
                                     .addParameter(sourceParameterSpec)
                                     .addModifiers(PUBLIC)
                                     .returns(sourceTargetPair.getRight())
@@ -86,7 +97,7 @@ public class ConversionServiceAdapterGenerator {
                                             "return $N.convert($N, $T.class)",
                                             injectedConversionServiceFieldSpec,
                                             sourceParameterSpec,
-                                            sourceTargetPair.getRight())
+                                            rawType(sourceTargetPair.getRight()))
                                     .build();
                         })
                 .collect(toList());
