@@ -1,9 +1,12 @@
 package org.mapstruct.extensions.spring.example;
 
+import java.util.List;
+
 public class CarDto {
     private String make;
     private SeatConfigurationDto seats;
     private String type;
+    private List<WheelDto> wheels;
 
     public String getMake() {
         return make;
@@ -27,5 +30,13 @@ public class CarDto {
 
     public void setType(final String type) {
         this.type = type;
+    }
+
+    public List<WheelDto> getWheels() {
+        return wheels;
+    }
+
+    public void setWheels(List<WheelDto> wheels) {
+        this.wheels = wheels;
     }
 }

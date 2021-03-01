@@ -1,6 +1,7 @@
 package org.mapstruct.extensions.spring.converter;
 
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -80,7 +81,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final ConversionServiceAdapterDescriptor descriptor,
       final Pair<String, String> adapterPackageAndClass,
       final TypeElement annotation) {
-    final List<Pair<ClassName, ClassName>> fromToMappings =
+    final List<Pair<TypeName, TypeName>> fromToMappings =
         roundEnv.getElementsAnnotatedWith(annotation).stream()
             .filter(this::isKindDeclared)
             .filter(this::hasConverterSupertype)
@@ -101,15 +102,14 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return mapper.asType().getKind() == DECLARED;
   }
 
-  private Pair<ClassName, ClassName> toFromToMapping(final ExecutableElement convert) {
+  private Pair<TypeName, TypeName> toFromToMapping(final ExecutableElement convert) {
     return Pair.of(
-        (ClassName)
             convert.getParameters().stream()
                 .map(Element::asType)
-                .map(ClassName::get)
+                .map(TypeName::get)
                 .findFirst()
                 .orElseThrow(NoSuchElementException::new),
-        (ClassName) ClassName.get(convert.getReturnType()));
+        TypeName.get(convert.getReturnType()));
   }
 
   private Element toConvertMethod(final Element mapper) {

@@ -1,21 +1,7 @@
 package org.mapstruct.extensions.spring.converter;
 
-import static com.google.common.collect.Iterables.concat;
-import static java.nio.file.Files.createTempDirectory;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static javax.lang.model.element.Modifier.*;
-import static javax.tools.StandardLocation.CLASS_OUTPUT;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mockito.ArgumentMatchers.any;
-
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
-import java.io.IOException;
-import java.io.Writer;
-import java.time.Clock;
-import java.util.Set;
-import javax.tools.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,10 +11,29 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
 
+import javax.tools.*;
+import java.io.IOException;
+import java.io.Writer;
+import java.lang.ref.WeakReference;
+import java.time.Clock;
+import java.util.Set;
+
+import static com.google.common.collect.Iterables.concat;
+import static java.nio.file.Files.createTempDirectory;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static javax.lang.model.element.Modifier.*;
+import static javax.tools.StandardLocation.CLASS_OUTPUT;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mockito.ArgumentMatchers.any;
+
 @ExtendWith(MockitoExtension.class)
 class ConverterMapperProcessorTest {
+  public static final ClassName CAR_CLASS_NAME = ClassName.get("test", "Car");
+  public static final ClassName CAR_DTO_CLASS_NAME = ClassName.get("test", "CarDto");
+
   @Spy
-  private ConversionServiceAdapterGenerator adapterGenerator =
+  private final ConversionServiceAdapterGenerator adapterGenerator =
       new ConversionServiceAdapterGenerator(Clock.systemUTC());
 
   @InjectMocks private ConverterMapperProcessor processor;
@@ -65,19 +70,11 @@ class ConverterMapperProcessorTest {
   static void setupCommonSourceFiles() {
     commonCompilationUnits =
         ImmutableSet.of(
-            JavaFile.builder(PACKAGE_NAME, buildModelClassTypeSpec("Car"))
+            JavaFile.builder(PACKAGE_NAME, buildSimpleModelClassTypeSpec("Car"))
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject(),
-            JavaFile.builder(PACKAGE_NAME, buildModelClassTypeSpec("CarDto"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder(PACKAGE_NAME, buildModelClassTypeSpec("Wheel"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder(PACKAGE_NAME, buildModelClassTypeSpec("WheelDto"))
+            JavaFile.builder(PACKAGE_NAME, buildSimpleModelClassTypeSpec("CarDto"))
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject(),
@@ -139,10 +136,10 @@ class ConverterMapperProcessorTest {
         .build();
   }
 
-  private static TypeSpec buildModelClassTypeSpec(final String className) {
+  private static TypeSpec buildSimpleModelClassTypeSpec(final String className) {
     final FieldSpec makeField = FieldSpec.builder(String.class, "make", PRIVATE).build();
     final ParameterSpec makeParameter = ParameterSpec.builder(String.class, "make", FINAL).build();
-    return TypeSpec.classBuilder(className).addTypeVariable(TypeVariableName.get("W", ))
+    return TypeSpec.classBuilder(className)
         .addModifiers(PUBLIC)
         .addField(makeField)
         .addMethod(
@@ -173,7 +170,9 @@ class ConverterMapperProcessorTest {
   void shouldCompileSimpleConverterMapper() throws IOException {
     // Given
     final JavaFile mapperFile =
-        JavaFile.builder(PACKAGE_NAME, converterMapperBuilder().build()).build();
+        JavaFile.builder(
+                PACKAGE_NAME, converterMapperWithoutGenericSourceOrTargetTypeBuilder().build())
+            .build();
 
     // When
     final boolean compileResult = compile(mapperFile.toJavaFileObject());
@@ -188,6 +187,7 @@ class ConverterMapperProcessorTest {
     final JavaFile mapperFile =
         JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericSourceTypeBuilder().build())
             .build();
+    // e.g. Mapper converting from java.lang.ref.WeakReference<Car> to CarDto
 
     // When
     final boolean compileResult = compile(mapperFile.toJavaFileObject());
@@ -202,6 +202,7 @@ class ConverterMapperProcessorTest {
     final JavaFile mapperFile =
         JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericTargetTypeBuilder().build())
             .build();
+    // e.g. Mapper converting from Car to java.lang.ref.WeakReference<CarDto>
 
     // When
     final boolean compileResult = compile(mapperFile.toJavaFileObject());
@@ -210,26 +211,43 @@ class ConverterMapperProcessorTest {
     then(compileResult).isTrue();
   }
 
-  private static TypeSpec.Builder converterMapperBuilder() {
-    return plainCarMapperBuilder()
+  private static TypeSpec.Builder converterMapperWithoutGenericSourceOrTargetTypeBuilder() {
+    return converterMapperBuilder(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME);
+  }
+
+  private static TypeSpec.Builder converterMapperBuilder(
+      final TypeName sourceTypeName, final TypeName targetTypeName) {
+    return plainCarMapperBuilder(sourceTypeName, targetTypeName)
         .addSuperinterface(
             ParameterizedTypeName.get(
-                ClassName.get(Converter.class),
-                ClassName.get("test", "Car"),
-                ClassName.get("test", "CarDto")));
+                ClassName.get(Converter.class), sourceTypeName, targetTypeName));
   }
 
-  private static TypeSpec.Builder plainCarMapperBuilder() {
+  private static TypeSpec.Builder converterMapperWithGenericSourceTypeBuilder() {
+    return converterMapperBuilder(
+        ParameterizedTypeName.get(ClassName.get(WeakReference.class), CAR_CLASS_NAME),
+        CAR_DTO_CLASS_NAME);
+  }
+
+  private static TypeSpec.Builder converterMapperWithGenericTargetTypeBuilder() {
+    return converterMapperBuilder(
+        CAR_CLASS_NAME,
+        ParameterizedTypeName.get(ClassName.get(WeakReference.class), CAR_DTO_CLASS_NAME));
+  }
+
+  private static TypeSpec.Builder plainCarMapperBuilder(
+      final TypeName sourceTypeName, final TypeName targetTypeName) {
     return TypeSpec.interfaceBuilder("CarMapper")
         .addAnnotation(Mapper.class)
-        .addMethod(convertMethod("Car", "CarDto"));
+        .addMethod(convertMethod(sourceTypeName, targetTypeName));
   }
 
-  private static MethodSpec convertMethod(final String parameterType, final String returnType) {
+  private static MethodSpec convertMethod(
+      final TypeName sourceTypeName, final TypeName targetTypeName) {
     return MethodSpec.methodBuilder("convert")
         .addModifiers(PUBLIC, ABSTRACT)
-        .addParameter(ClassName.get("test", parameterType), "car")
-        .returns(ClassName.get("test", returnType))
+        .addParameter(sourceTypeName, "car")
+        .returns(targetTypeName)
         .build();
   }
 
@@ -237,7 +255,9 @@ class ConverterMapperProcessorTest {
   void shouldIgnoreNonConverterMappers() throws IOException {
     // Given
     final JavaFile plainMapperFile =
-        JavaFile.builder(PACKAGE_NAME, plainCarMapperBuilder().build()).build();
+        JavaFile.builder(
+                PACKAGE_NAME, plainCarMapperBuilder(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME).build())
+            .build();
 
     // When
     final boolean compileResult = compile(plainMapperFile.toJavaFileObject());
@@ -258,7 +278,9 @@ class ConverterMapperProcessorTest {
     final JavaFile mapperFile =
         JavaFile.builder(
                 PACKAGE_NAME,
-                converterMapperBuilder().addMethod(convertMethod("CarDto", "Car")).build())
+                converterMapperWithoutGenericSourceOrTargetTypeBuilder()
+                    .addMethod(convertMethod(CAR_DTO_CLASS_NAME, CAR_CLASS_NAME))
+                    .build())
             .build();
 
     // When
@@ -273,6 +295,6 @@ class ConverterMapperProcessorTest {
     then(descriptor).isNotNull();
     then(descriptor.getFromToMappings())
         .hasSize(1)
-        .containsExactly(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto")));
+        .containsExactly(Pair.of(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME));
   }
 }

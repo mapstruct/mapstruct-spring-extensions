@@ -4,6 +4,7 @@ public class Car {
     private String make;
     private SeatConfiguration seatConfiguration;
     private CarType type;
+    private Wheels wheels;
 
     public String getMake() {
         return make;
@@ -27,5 +28,13 @@ public class Car {
 
     public void setType(final CarType type) {
         this.type = type;
+    }
+
+    public Wheels getWheels() {
+        return wheels;
+    }
+
+    public void setWheels(Wheels wheels) {
+        this.wheels = wheels;
     }
 }
