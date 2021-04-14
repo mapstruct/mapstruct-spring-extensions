@@ -99,6 +99,11 @@ class ConverterMapperProcessorTest {
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject(),
+                JavaFile.builder(
+                        "org.springframework.context.annotation", buildSimpleAnnotationTypeSpec("Lazy"))
+                 .skipJavaLangImports(true)
+                 .build()
+                 .toJavaFileObject(),
             JavaFile.builder(PACKAGE_NAME, buildConfigClass("MyMappingConfig"))
                 .skipJavaLangImports(true)
                 .build()
