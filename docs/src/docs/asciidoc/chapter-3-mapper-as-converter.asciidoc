@@ -67,7 +67,8 @@ public class ConversionServiceAdapter {
       final SeatConfiguration source) {
     return conversionService.convert(source, SeatConfigurationDto.class);
   }
-}----
+}
+----
 ====
 
 Since this class' methods match the signature that MapStruct expects, we can now add it to the CarMapper:
