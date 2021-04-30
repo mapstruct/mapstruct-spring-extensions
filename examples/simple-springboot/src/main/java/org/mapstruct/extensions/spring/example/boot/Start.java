@@ -1,6 +1,5 @@
 package org.mapstruct.extensions.spring.example.boot;
 
-import org.mapstruct.extensions.spring.converter.ConversionServiceAdapter;
 import org.mapstruct.extensions.spring.example.Car;
 import org.mapstruct.extensions.spring.example.CarDto;
 import org.mapstruct.extensions.spring.example.SeatConfiguration;

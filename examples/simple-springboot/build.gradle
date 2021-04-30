@@ -11,4 +11,5 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.4.0.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.0.Final'
     implementation 'org.springframework.boot:spring-boot-starter'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.4.4'
 }
