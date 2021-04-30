@@ -56,7 +56,9 @@ public class ConversionServiceAdapterGenerator {
         if (StringUtils.isNotEmpty(descriptor.getConversionServiceBeanName())) {
             parameterBuilder.addAnnotation(buildQualifierANnotation(descriptor));
         }
-        parameterBuilder.addAnnotation(buildLazyAnnotation());
+        if (Boolean.TRUE.equals(descriptor.isLazyAnnotatedConversionServiceBean())) {
+            parameterBuilder.addAnnotation(buildLazyAnnotation());
+        }
         return parameterBuilder.build();
     }
 
