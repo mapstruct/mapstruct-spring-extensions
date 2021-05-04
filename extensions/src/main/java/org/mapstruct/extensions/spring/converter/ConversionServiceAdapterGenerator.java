@@ -9,6 +9,7 @@ import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.*;
@@ -77,7 +78,7 @@ public class ConversionServiceAdapterGenerator {
         return (ClassName) typeName;
     }
 
-    private static Iterable<MethodSpec> buildMappingMethods(
+    /*private static Iterable<MethodSpec> buildMappingMethods(
             final ConversionServiceAdapterDescriptor descriptor,
             final FieldSpec injectedConversionServiceFieldSpec) {
         return descriptor.getFromToMappings().stream()
@@ -101,14 +102,71 @@ public class ConversionServiceAdapterGenerator {
                                     .build();
                         })
                 .collect(toList());
+    }*/
+
+    private static Iterable<MethodSpec> buildMappingMethods(
+            final ConversionServiceAdapterDescriptor descriptor,
+            final FieldSpec injectedConversionServiceFieldSpec) {
+
+        List<MethodSpec> mapList =  descriptor.getFromToMappings().stream()
+                .map(
+                        sourceTargetPair -> {
+                            final ParameterSpec sourceParameterSpec =
+                                    buildSourceParameterSpec(sourceTargetPair.getLeft());
+                            return MethodSpec.methodBuilder(
+                                    "map"
+                                            + simpleName(sourceTargetPair.getLeft())
+                                            + "To"
+                                            + simpleName(sourceTargetPair.getRight()))
+                                    .addParameter(sourceParameterSpec)
+                                    .addModifiers(PUBLIC)
+                                    .returns(sourceTargetPair.getRight())
+                                    .addStatement(
+                                            "return $N.map($N, $T.class)",
+                                            injectedConversionServiceFieldSpec,
+                                            sourceParameterSpec,
+                                            rawType(sourceTargetPair.getRight()))
+                                    .build();
+                        })
+                .collect(toList());
+
+        List<MethodSpec> revMapList =  descriptor.getFromToMappings().stream()
+                .map(
+                        sourceTargetPair -> {
+                            final ParameterSpec sourceParameterSpec =
+                                    buildSourceParameterSpec(sourceTargetPair.getRight());
+                            return MethodSpec.methodBuilder(
+                                    "map"
+                                            + simpleName(sourceTargetPair.getRight())
+                                            + "To"
+                                            + simpleName(sourceTargetPair.getLeft()))
+                                    .addParameter(sourceParameterSpec)
+                                    .addModifiers(PUBLIC)
+                                    .returns(sourceTargetPair.getLeft())
+                                    .addStatement(
+                                            "return $N.map($N, $T.class)",
+                                            injectedConversionServiceFieldSpec,
+                                            sourceParameterSpec,
+                                            rawType(sourceTargetPair.getLeft()))
+                                    .build();
+                        })
+                .collect(toList());
+        mapList.addAll(revMapList);
+        return mapList;
     }
 
     private static ParameterSpec buildSourceParameterSpec(final TypeName sourceClassName) {
         return ParameterSpec.builder(sourceClassName, "source", FINAL).build();
     }
 
-    private static FieldSpec buildConversionServiceFieldSpec() {
+    /*private static FieldSpec buildConversionServiceFieldSpec() {
         return FieldSpec.builder(ClassName.get("org.springframework.core.convert", "ConversionService"), "conversionService", PRIVATE, FINAL).build();
+    }*/
+
+    private static FieldSpec buildConversionServiceFieldSpec() {
+        return FieldSpec.builder(ClassName.get(
+                "org.mapstruct.extensions.spring",
+                "IObjectMapper"), "conversionService", PRIVATE, FINAL).build();
     }
 
     private AnnotationSpec buildGeneratedAnnotationSpec() {

@@ -10,3 +10,5 @@ include "examples:classname"
 include "examples:packagename-and-classname"
 include "examples:custom-conversion-service-bean"
 include "docs"
+include 'examples:automap'
+

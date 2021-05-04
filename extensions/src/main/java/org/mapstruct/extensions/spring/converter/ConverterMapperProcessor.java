@@ -36,8 +36,12 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   protected static final String MAPPER = "org.mapstruct.Mapper";
   protected static final String SPRING_MAPPER_CONFIG =
       "org.mapstruct.extensions.spring.SpringMapperConfig";
-  protected static final String SPRING_CONVERTER_FULL_NAME =
-      "org.springframework.core.convert.converter.Converter";
+  /*protected static final String SPRING_CONVERTER_FULL_NAME =
+      "org.springframework.core.convert.converter.Converter";*/
+
+  protected static final String BASE_AUTOMAPPER_FULL_NAME =
+          "org.mapstruct.extensions.spring.BaseAutoMapper";
+
 
   private final ConversionServiceAdapterGenerator adapterGenerator;
 
@@ -76,7 +80,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return MAPPER.contentEquals(annotation.getQualifiedName());
   }
 
-  private void processMapperAnnotation(
+  private void   processMapperAnnotation(
       final RoundEnvironment roundEnv,
       final ConversionServiceAdapterDescriptor descriptor,
       final Pair<String, String> adapterPackageAndClass,
@@ -91,6 +95,9 @@ public class ConverterMapperProcessor extends AbstractProcessor {
             .map(this::toFromToMapping)
             .collect(toList());
     descriptor.setFromToMappings(fromToMappings);
+    if (fromToMappings.isEmpty()){
+      return;
+    }
     writeAdapterClassFile(descriptor, adapterPackageAndClass);
   }
 
@@ -116,8 +123,9 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return mapper.getEnclosedElements().stream()
         .filter(element -> element.getKind() == METHOD)
         .filter(method -> method.getModifiers().contains(PUBLIC))
-        .filter(method -> method.getSimpleName().contentEquals("convert"))
-        .filter(convert -> ((ExecutableElement) convert).getParameters().size() == 1)
+        //.filter(method -> method.getSimpleName().contentEquals("convert"))
+            .filter(method -> method.getSimpleName().contentEquals("map"))
+            .filter(convert -> ((ExecutableElement) convert).getParameters().size() == 1)
         .filter(
             convert ->
                 processingEnv
@@ -132,12 +140,15 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   private void writeAdapterClassFile(
       final ConversionServiceAdapterDescriptor descriptor,
       final Pair<String, String> adapterPackageAndClass) {
+
     try (final Writer outputWriter =
+
         processingEnv
             .getFiler()
             .createSourceFile(
-                adapterPackageAndClass.getLeft() + "." + adapterPackageAndClass.getRight())
+                "org.mapstruct.extensions.spring" + "." + adapterPackageAndClass.getRight())
             .openWriter()) {
+
       adapterGenerator.writeConversionServiceAdapter(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv
@@ -155,7 +166,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     final MutablePair<String, String> packageAndClass =
         MutablePair.of(
-            ConverterMapperProcessor.class.getPackage().getName(), "ConversionServiceAdapter");
+            "org.mapstruct.extensions.spring", "ConversionServiceAdapter");
     for (final TypeElement annotation : annotations) {
       if (SPRING_MAPPER_CONFIG.contentEquals(annotation.getQualifiedName())) {
         roundEnv
@@ -202,7 +213,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     final Types typeUtils = processingEnv.getTypeUtils();
     return typeUtils.directSupertypes(mapper.asType()).stream()
         .filter(
-            supertype -> typeUtils.erasure(supertype).toString().equals(SPRING_CONVERTER_FULL_NAME))
+            supertype -> typeUtils.erasure(supertype).toString().equals(BASE_AUTOMAPPER_FULL_NAME))
         .findFirst();
   }
 

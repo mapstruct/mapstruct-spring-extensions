@@ -1,1 +1,2 @@
+org.mapstruct.extensions.spring.converter.AutomapProcessor
 org.mapstruct.extensions.spring.converter.ConverterMapperProcessor

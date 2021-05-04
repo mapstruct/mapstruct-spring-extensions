@@ -5,6 +5,7 @@ dependencies {
     implementation project(":annotations")
     implementation 'com.squareup:javapoet:1.13.0'
     implementation 'org.apache.commons:commons-lang3:3.11'
+    implementation 'org.mapstruct:mapstruct:1.4.0.Final'
 
     testImplementation 'org.mapstruct:mapstruct:1.4.0.Final'
     testImplementation 'org.assertj:assertj-core:3.19.0'
