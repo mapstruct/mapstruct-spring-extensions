@@ -2,6 +2,7 @@ package org.mapstruct.extensions.spring.converter;
 
 import javax.annotation.Generated;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Component;
 import test.Car;
@@ -15,7 +16,7 @@ public class ConversionServiceAdapter {
   private final ConversionService conversionService;
 
   public ConversionServiceAdapter(
-      @Qualifier("myConversionService") final ConversionService conversionService) {
+          @Qualifier("myConversionService") @Lazy final ConversionService conversionService) {
     this.conversionService = conversionService;
   }
 

@@ -10,6 +10,7 @@ public class ConversionServiceAdapterDescriptor {
     private ClassName adapterClassName;
     private String conversionServiceBeanName;
     private List<Pair<TypeName, TypeName>> fromToMappings;
+    private boolean lazyAnnotatedConversionServiceBean;
 
     public ClassName getAdapterClassName() {
         return adapterClassName;
@@ -33,5 +34,13 @@ public class ConversionServiceAdapterDescriptor {
 
     public void setFromToMappings(final List<Pair<TypeName, TypeName>> fromToMappings) {
         this.fromToMappings = fromToMappings;
+    }
+
+    public boolean isLazyAnnotatedConversionServiceBean() {
+        return lazyAnnotatedConversionServiceBean;
+    }
+
+    public void setLazyAnnotatedConversionServiceBean(boolean lazyAnnotatedConversionServiceBean) {
+        this.lazyAnnotatedConversionServiceBean = lazyAnnotatedConversionServiceBean;
     }
 }

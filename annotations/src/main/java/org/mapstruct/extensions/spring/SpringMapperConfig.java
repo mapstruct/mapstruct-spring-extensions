@@ -37,4 +37,12 @@ public @interface SpringMapperConfig {
      * @return The bean name for the Spring {@link org.springframework.core.convert.ConversionService}.
      */
     String conversionServiceBeanName() default "";
+
+    /**
+     * To set if the Lazy annotation will be added to the
+     * ConversionService's usage in the ConversionServiceAdapter.  Defaults to true.
+     *
+     * @return true to add the Lazy annotation
+     */
+    boolean lazyAnnotatedConversionServiceBean() default true;
 }
