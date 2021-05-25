@@ -2,7 +2,7 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
-    compileOnly 'org.springframework:spring-core:5.0.0.RELEASE'
+    implementation libs.spring.core
 }
 
 java {

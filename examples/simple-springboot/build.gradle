@@ -1,15 +1,13 @@
-plugins {
-    id "org.springframework.boot" version "2.4.4"
-    id "io.spring.dependency-management" version "1.0.11.RELEASE"
-}
+apply plugin: "org.springframework.boot"
+apply plugin: "io.spring.dependency-management"
 
 dependencies {
     annotationProcessor project(":extensions")
-    implementation project(":examples:model")
-    implementation project(":annotations")
+    implementation projects.examples.model
+    implementation projects.annotations
 
-    implementation 'org.mapstruct:mapstruct:1.4.0.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.0.Final'
-    implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:2.4.4'
+    implementation libs.mapstruct.core
+    annotationProcessor libs.mapstruct.processor
+    implementation libs.spring.boot.starter.core
+    testImplementation libs.spring.boot.starter.test
 }

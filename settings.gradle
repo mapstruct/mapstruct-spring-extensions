@@ -12,3 +12,5 @@ include "examples:custom-conversion-service-bean"
 include "examples:simple-springboot"
 include "docs"
 
+enableFeaturePreview("VERSION_CATALOGS")
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
