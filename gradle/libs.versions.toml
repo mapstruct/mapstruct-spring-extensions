@@ -1,13 +1,13 @@
 [versions]
 assertj = "3.19.0"
-commons-io = "2.8.0"
+commons-io = "2.9.0"
 commons-lang3 = "3.12.0"
 guava = "30.1.1-jre"
 javapoet = "1.13.0"
 jsr250 = "1.0"
 jupiter = "5.7.2"
 mapstruct = "1.4.0.Final"
-mockito = "3.10.0"
+mockito = "3.11.0"
 spring = "5.0.0.RELEASE"
 
 [libraries]
