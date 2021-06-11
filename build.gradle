@@ -11,9 +11,33 @@ plugins {
     id 'jacoco'
     id 'maven-publish'
     id 'signing'
-    id "com.github.ben-manes.versions" version "0.38.0"
-    id "org.springframework.boot" version "2.5.0" apply false
+    id "com.github.ben-manes.versions" version "0.39.0"
+    id "org.springframework.boot" version "2.5.1" apply false
     id "io.spring.dependency-management" version "1.0.11.RELEASE" apply false
+}
+
+def isNonStable = { String version ->
+    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { otherIt -> version.toUpperCase().contains(otherIt) }
+    def regex = /^[0-9,.v-]+(-r)?$/
+    return !stableKeyword && !(version ==~ regex)
+}
+
+def specificMinimumVersions = { ModuleComponentIdentifier candidate ->
+    candidate.group == "org.mapstruct" || candidate.group == "org.springframework"
+}
+
+dependencyUpdates {
+    resolutionStrategy {
+        componentSelection {
+            all {
+                if (isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)) {
+                    reject('Release candidate')
+                } else if (specificMinimumVersions(it.candidate)) {
+                    reject('Minimal compatible version')
+                }
+            }
+        }
+    }
 }
 
 allprojects {
