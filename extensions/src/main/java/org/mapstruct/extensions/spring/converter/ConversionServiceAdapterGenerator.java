@@ -55,12 +55,12 @@ public class ConversionServiceAdapterGenerator {
     private static ParameterSpec buildConstructorParameterSpec(final ConversionServiceAdapterDescriptor descriptor, final FieldSpec conversionServiceFieldSpec) {
         final ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(conversionServiceFieldSpec.type, conversionServiceFieldSpec.name, FINAL);
         if (StringUtils.isNotEmpty(descriptor.getConversionServiceBeanName())) {
-            parameterBuilder.addAnnotation(buildQualifierANnotation(descriptor));
+            parameterBuilder.addAnnotation(buildQualifierAnotation(descriptor));
         }
         return parameterBuilder.build();
     }
 
-    private static AnnotationSpec buildQualifierANnotation(ConversionServiceAdapterDescriptor descriptor) {
+    private static AnnotationSpec buildQualifierAnotation(ConversionServiceAdapterDescriptor descriptor) {
         return AnnotationSpec
                 .builder(ClassName.get("org.springframework.beans.factory.annotation", "Qualifier"))
                 .addMember("value", "$S", descriptor.getConversionServiceBeanName())
@@ -77,32 +77,6 @@ public class ConversionServiceAdapterGenerator {
         }
         return (ClassName) typeName;
     }
-
-    /*private static Iterable<MethodSpec> buildMappingMethods(
-            final ConversionServiceAdapterDescriptor descriptor,
-            final FieldSpec injectedConversionServiceFieldSpec) {
-        return descriptor.getFromToMappings().stream()
-                .map(
-                        sourceTargetPair -> {
-                            final ParameterSpec sourceParameterSpec =
-                                    buildSourceParameterSpec(sourceTargetPair.getLeft());
-                            return MethodSpec.methodBuilder(
-                                    "map"
-                                            + simpleName(sourceTargetPair.getLeft())
-                                            + "To"
-                                            + simpleName(sourceTargetPair.getRight()))
-                                    .addParameter(sourceParameterSpec)
-                                    .addModifiers(PUBLIC)
-                                    .returns(sourceTargetPair.getRight())
-                                    .addStatement(
-                                            "return $N.convert($N, $T.class)",
-                                            injectedConversionServiceFieldSpec,
-                                            sourceParameterSpec,
-                                            rawType(sourceTargetPair.getRight()))
-                                    .build();
-                        })
-                .collect(toList());
-    }*/
 
     private static Iterable<MethodSpec> buildMappingMethods(
             final ConversionServiceAdapterDescriptor descriptor,
@@ -158,10 +132,6 @@ public class ConversionServiceAdapterGenerator {
     private static ParameterSpec buildSourceParameterSpec(final TypeName sourceClassName) {
         return ParameterSpec.builder(sourceClassName, "source", FINAL).build();
     }
-
-    /*private static FieldSpec buildConversionServiceFieldSpec() {
-        return FieldSpec.builder(ClassName.get("org.springframework.core.convert", "ConversionService"), "conversionService", PRIVATE, FINAL).build();
-    }*/
 
     private static FieldSpec buildConversionServiceFieldSpec() {
         return FieldSpec.builder(ClassName.get(
