@@ -57,6 +57,9 @@ public class ConversionServiceAdapterGenerator {
         if (StringUtils.isNotEmpty(descriptor.getConversionServiceBeanName())) {
             parameterBuilder.addAnnotation(buildQualifierAnotation(descriptor));
         }
+        if (Boolean.TRUE.equals(descriptor.isLazyAnnotatedConversionServiceBean())) {
+            parameterBuilder.addAnnotation(buildLazyAnnotation());
+        }
         return parameterBuilder.build();
     }
 
@@ -64,6 +67,12 @@ public class ConversionServiceAdapterGenerator {
         return AnnotationSpec
                 .builder(ClassName.get("org.springframework.beans.factory.annotation", "Qualifier"))
                 .addMember("value", "$S", descriptor.getConversionServiceBeanName())
+                .build();
+    }
+
+    private static AnnotationSpec buildLazyAnnotation() {
+        return AnnotationSpec
+                .builder(ClassName.get("org.springframework.context.annotation","Lazy"))
                 .build();
     }
 

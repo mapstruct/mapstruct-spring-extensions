@@ -33,6 +33,7 @@ class ConversionServiceAdapterGeneratorTest {
             "ConversionServiceAdapter"));
     descriptor.setFromToMappings(
         singletonList(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto"))));
+    descriptor.setLazyAnnotatedConversionServiceBean(true);
     final StringWriter outputWriter = new StringWriter();
 
     // When
@@ -54,6 +55,7 @@ class ConversionServiceAdapterGeneratorTest {
     descriptor.setConversionServiceBeanName("myConversionService");
     descriptor.setFromToMappings(
             singletonList(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto"))));
+    descriptor.setLazyAnnotatedConversionServiceBean(true);
     final StringWriter outputWriter = new StringWriter();
 
     // When

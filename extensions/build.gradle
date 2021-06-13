@@ -2,17 +2,19 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
-    implementation project(":annotations")
-    implementation 'com.squareup:javapoet:1.13.0'
-    implementation 'org.apache.commons:commons-lang3:3.11'
-    implementation 'org.mapstruct:mapstruct:1.4.0.Final'
+    implementation projects.annotations
+    implementation libs.javapoet
+    implementation libs.commons.lang3
 
-    testImplementation 'org.mapstruct:mapstruct:1.4.0.Final'
-    testImplementation 'org.assertj:assertj-core:3.19.0'
-    testImplementation 'commons-io:commons-io:2.8.0'
-    testImplementation 'com.google.guava:guava:30.1-jre'
-    testImplementation 'org.mockito:mockito-junit-jupiter:3.8.0'
-    testImplementation 'org.springframework:spring-core:5.0.0.RELEASE'
+    testImplementation libs.assertj
+    testImplementation libs.bundles.junit.jupiter
+    testImplementation libs.commons.io
+    testImplementation libs.guava
+    testImplementation libs.mapstruct.core
+    testImplementation libs.mockito
+    testImplementation libs.spring.core
+
+    implementation libs.mapstruct.core
 }
 
 java {

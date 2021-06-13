@@ -11,12 +11,37 @@ plugins {
     id 'jacoco'
     id 'maven-publish'
     id 'signing'
-    id "com.github.ben-manes.versions" version "0.36.0"
+    id "com.github.ben-manes.versions" version "0.39.0"
+    id "org.springframework.boot" version "2.5.1" apply false
+    id "io.spring.dependency-management" version "1.0.11.RELEASE" apply false
+}
+
+def isNonStable = { String version ->
+    def stableKeyword = ['RELEASE', 'FINAL', 'GA'].any { otherIt -> version.toUpperCase().contains(otherIt) }
+    def regex = /^[0-9,.v-]+(-r)?$/
+    return !stableKeyword && !(version ==~ regex)
+}
+
+def specificMinimumVersions = { ModuleComponentIdentifier candidate ->
+    candidate.group == "org.mapstruct" || candidate.group == "org.springframework"
+}
+
+dependencyUpdates {
+    resolutionStrategy {
+        componentSelection {
+            all {
+                if (isNonStable(it.candidate.version) && !isNonStable(it.currentVersion)) {
+                    reject('Release candidate')
+                } else if (specificMinimumVersions(it.candidate)) {
+                    reject('Minimal compatible version')
+                }
+            }
+        }
+    }
 }
 
 allprojects {
     repositories {
-        jcenter()
         mavenCentral()
     }
 }
@@ -26,12 +51,7 @@ subprojects {
     apply plugin: "jacoco"
 
     group = 'org.mapstruct.extensions.spring'
-    version = '0.0.3-SNAPSHOT'
-
-    dependencies {
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
-        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
-    }
+    version = '0.1.0-SNAPSHOT'
 
     java {
         toolchain {
@@ -59,6 +79,6 @@ subprojects {
 }
 
 wrapper {
-    gradleVersion = '6.8.3'
+    gradleVersion = '7.0.2'
 }
 

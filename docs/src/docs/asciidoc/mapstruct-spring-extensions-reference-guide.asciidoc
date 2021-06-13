@@ -1,4 +1,4 @@
-= MapStruct {mapstructSpringExtensionsVersion} Reference Guide
+= MapStruct Spring Extensions {mapstructSpringExtensionsVersion} Reference Guide
 :revdate: {docdate}
 :toc: right
 :sectanchors:

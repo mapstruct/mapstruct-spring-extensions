@@ -1,14 +1,13 @@
+apply plugin: "org.springframework.boot"
+apply plugin: "io.spring.dependency-management"
+
 dependencies {
     annotationProcessor project(":extensions")
     implementation projects.examples.model
     implementation projects.annotations
 
-    testImplementation libs.assertj
-    testImplementation libs.bundles.junit.jupiter
-    implementation libs.jsr250
     implementation libs.mapstruct.core
     annotationProcessor libs.mapstruct.processor
-    implementation libs.spring.context
-    implementation libs.spring.core
-    testImplementation libs.spring.test
+    implementation libs.spring.boot.starter.core
+    testImplementation libs.spring.boot.starter.test
 }

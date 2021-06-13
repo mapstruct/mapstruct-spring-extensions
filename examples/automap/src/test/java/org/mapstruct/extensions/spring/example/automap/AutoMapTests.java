@@ -12,7 +12,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mapstruct.extensions.spring.example.automap.CarType.OTHER;
 import static org.mapstruct.extensions.spring.example.automap.SeatMaterial.LEATHER;

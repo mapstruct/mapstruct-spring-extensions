@@ -1,0 +1,33 @@
+[versions]
+assertj = "3.19.0"
+commons-io = "2.9.0"
+commons-lang3 = "3.12.0"
+guava = "30.1.1-jre"
+javapoet = "1.13.0"
+jsr250 = "1.0"
+jupiter = "5.7.2"
+mapstruct = "1.4.0.Final"
+mockito = "3.11.0"
+spring = "5.0.0.RELEASE"
+
+[libraries]
+assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
+commons-io = { group = "commons-io", name = "commons-io", version.ref = "commons-io" }
+commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "commons-lang3" }
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+javapoet = { group = "com.squareup", name = "javapoet", version.ref = "javapoet"}
+jsr250 = { group = "javax.annotation", name = "jsr250-api", version.ref = "jsr250" }
+junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "jupiter" }
+junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "jupiter" }
+junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "jupiter" }
+mapstruct-core = { group = "org.mapstruct", name = "mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { group = "org.mapstruct", name = "mapstruct-processor", version.ref = "mapstruct" }
+mockito = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
+spring-boot-starter-core = { group = "org.springframework.boot", name = "spring-boot-starter" }
+spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+spring-context = { group = "org.springframework", name = "spring-context", version.ref = "spring" }
+spring-core = { group = "org.springframework", name = "spring-core", version.ref = "spring" }
+spring-test = { group = "org.springframework", name = "spring-test", version.ref = "spring" }
+
+[bundles]
+junit-jupiter = ["junit-jupiter-api", "junit-jupiter-engine", "junit-jupiter-params"]

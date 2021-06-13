@@ -1,12 +1,14 @@
 dependencies {
     annotationProcessor project(":extensions")
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    compileOnly 'javax.annotation:jsr250-api:1.0'
-    implementation 'org.mapstruct:mapstruct:1.4.0.Final'
-    implementation project(":annotations")
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.0.Final'
-    implementation 'org.springframework:spring-core:5.0.0.RELEASE'
-    implementation 'org.springframework:spring-context:5.0.0.RELEASE'
-    testImplementation 'org.springframework:spring-test:5.0.0.RELEASE'
-    testImplementation 'org.assertj:assertj-core:3.15.0'
+    implementation projects.annotations
+
+    testImplementation libs.assertj
+    testImplementation libs.bundles.junit.jupiter
+    implementation libs.jsr250
+    implementation libs.mapstruct.core
+    annotationProcessor libs.mapstruct.processor
+    implementation libs.spring.context
+    implementation libs.spring.core
+    testImplementation libs.spring.test
 }

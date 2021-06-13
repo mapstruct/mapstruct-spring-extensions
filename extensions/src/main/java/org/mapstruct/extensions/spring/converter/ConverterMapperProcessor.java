@@ -66,6 +66,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     descriptor.setAdapterClassName(
         ClassName.get(adapterPackageAndClass.getLeft(), adapterPackageAndClass.getRight()));
     descriptor.setConversionServiceBeanName(getConversionServiceName(annotations, roundEnv));
+    descriptor.setLazyAnnotatedConversionServiceBean(getLazyAnnotatedConversionServiceBean(annotations, roundEnv));
     annotations.stream()
         .filter(this::isMapperAnnotation)
         .forEach(
@@ -204,6 +205,17 @@ public class ConverterMapperProcessor extends AbstractProcessor {
 
   private SpringMapperConfig toSpringMapperConfig(final Element element) {
     return element.getAnnotation(SpringMapperConfig.class);
+  }
+
+  private boolean getLazyAnnotatedConversionServiceBean(
+          final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    return annotations.stream()
+            .filter(annotation -> SPRING_MAPPER_CONFIG.contentEquals(annotation.getQualifiedName()))
+            .findFirst()
+            .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
+            .map(this::toSpringMapperConfig)
+            .map(SpringMapperConfig::lazyAnnotatedConversionServiceBean)
+            .orElse(Boolean.TRUE);
   }
 
   private Optional<? extends TypeMirror> getConverterSupertype(final Element mapper) {

@@ -9,6 +9,9 @@ include "examples:packagename"
 include "examples:classname"
 include "examples:packagename-and-classname"
 include "examples:custom-conversion-service-bean"
+include "examples:simple-springboot"
+include "examples:automap"
 include "docs"
-include 'examples:automap'
 
+enableFeaturePreview("VERSION_CATALOGS")
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

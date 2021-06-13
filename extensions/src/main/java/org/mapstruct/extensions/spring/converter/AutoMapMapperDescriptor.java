@@ -1,12 +1,7 @@
 package org.mapstruct.extensions.spring.converter;
 
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;/*
-import io.github.zhaord.mapstruct.plus.annotations.AutoMapField;
-import lombok.Data;
-import org.mapstruct.NullValueCheckStrategy;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.control.MappingControl;*/
+import com.squareup.javapoet.TypeName;
 import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.control.MappingControl;

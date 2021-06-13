@@ -55,7 +55,7 @@ The generated Adapter class will look like this:
 public class ConversionServiceAdapter {
   private final ConversionService conversionService;
 
-  public ConversionServiceAdapter(final ConversionService conversionService) {
+  public ConversionServiceAdapter(@Lazy final ConversionService conversionService) {
     this.conversionService = conversionService;
   }
 

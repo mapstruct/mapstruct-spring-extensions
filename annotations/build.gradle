@@ -2,9 +2,9 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
-    compileOnly 'org.springframework:spring-core:5.0.0.RELEASE'
-    compileOnly 'org.springframework:spring-context:5.0.0.RELEASE'
-    compileOnly 'org.mapstruct:mapstruct:1.4.0.Final'
+    implementation libs.spring.core
+    implementation libs.spring.context
+    implementation libs.mapstruct.core
 }
 
 java {
