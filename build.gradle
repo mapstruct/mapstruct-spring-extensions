@@ -70,8 +70,8 @@ subprojects {
 
     jacocoTestReport {
         reports {
-            xml.enabled true
-            html.enabled true
+            xml.required = true
+            html.required = true
         }
     }
 
@@ -79,6 +79,6 @@ subprojects {
 }
 
 wrapper {
-    gradleVersion = '7.0.2'
+    gradleVersion = '7.1'
 }
 
