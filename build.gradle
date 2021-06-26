@@ -6,6 +6,7 @@ plugins {
     id "com.github.ben-manes.versions" version "0.39.0"
     id "org.springframework.boot" version "2.5.1" apply false
     id "io.spring.dependency-management" version "1.0.11.RELEASE" apply false
+    id "org.asciidoctor.jvm.convert" version "3.3.2" apply false
 }
 
 def isNonStable = { String version ->
