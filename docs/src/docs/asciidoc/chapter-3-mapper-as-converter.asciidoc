@@ -32,6 +32,7 @@ This allows using the Mapper indirectly via the `ConversionService`:
 All this can be achieved already with MapStruct's core functionality. However, when a Mapper wants to https://mapstruct.org/documentation/stable/reference/html/#invoking-other-mappers[invoke] another one, it can't take the route via the `ConversionService`, because the latter's `convert` method does not match the signature that MapStruct expects for a mapping method. Thus, the developer still has to add every invoked Mapper to the invoking Mapper's `uses` element. This creates (aside from a potentially long list) a tight coupling between Mappers that the `ConversionService` wants to avoid.
 
 This is where MapStruct Spring Extensions can help. Including the two artifacts in your build will generate an Adapter class that _can_ be used by an invoking Mapper. Let's say that the above CarMapper is accompanied by a SeatConfigurationMapper:
+
 ====
 [source, java, linenums]
 [subs="verbatim,attributes"]
@@ -116,6 +117,56 @@ import org.mapstruct.extensions.spring.SpringMapperConfig;
 @MapperConfig(componentModel = "spring", uses = ConversionServiceAdapter.class)
 @SpringMapperConfig(conversionServiceBeanName = "myConversionService")
 public interface MapperSpringConfig {
+}
+----
+====
+[[externalConversions]]
+=== External Conversions
+Spring ships with a variety of https://github.com/spring-projects/spring-framework/tree/main/spring-core/src/main/java/org/springframework/core/convert/support[builtin conversions], e.g. `String` to `Locale` or `Object` to `Optional`. In order to use these (or your own conversions from another module) in the same fashion, you can add them as `externalConversions` to your `SpringMapperConfig`:
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+import org.mapstruct.MapperConfig;
+import org.mapstruct.extensions.spring.ExternalConversion;
+import org.mapstruct.extensions.spring.SpringMapperConfig;
+
+import java.util.Locale;
+
+@MapperConfig(componentModel = "spring")
+@SpringMapperConfig(
+    externalConversions = @ExternalConversion(sourceType = String.class, targetType = Locale.class))
+public interface MapstructConfig {}
+----
+====
+
+The processor will add the corresponding methods to the generated adapter so MapStruct can use them in the same fashion as the ones for the Converter Mappers in the same module:
+====
+[source, java, linenums]
+[subs="verbatim,attributes"]
+----
+import java.lang.String;
+import java.util.Locale;
+import javax.annotation.Generated;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.stereotype.Component;
+
+@Generated(
+    value = "org.mapstruct.extensions.spring.converter.ConversionServiceAdapterGenerator",
+    date = "2021-06-25T18:51:21.585Z"
+)
+@Component
+public class ConversionServiceAdapter {
+  private final ConversionService conversionService;
+
+  public ConversionServiceAdapter(@Lazy final ConversionService conversionService) {
+    this.conversionService = conversionService;
+  }
+
+  public Locale mapStringToLocale(final String source) {
+    return conversionService.convert(source, Locale.class);
+  }
 }
 ----
 ====

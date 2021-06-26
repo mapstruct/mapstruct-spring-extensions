@@ -1,6 +1,4 @@
-plugins {
-    id 'org.asciidoctor.jvm.convert' version '3.3.2'
-}
+apply plugin: "org.asciidoctor.jvm.convert"
 
 asciidoctor {
     baseDirFollowsSourceDir()

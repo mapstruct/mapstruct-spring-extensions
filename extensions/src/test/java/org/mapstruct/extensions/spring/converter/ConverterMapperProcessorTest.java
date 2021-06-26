@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.Mapper;
+import org.mapstruct.extensions.spring.ExternalConversion;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.ref.WeakReference;
 import java.time.Clock;
+import java.util.Locale;
 import java.util.Set;
 
 import static com.google.common.collect.Iterables.concat;
@@ -83,46 +85,19 @@ class ConverterMapperProcessorTest {
                 .build()
                 .toJavaFileObject(),
             JavaFile.builder(
-                    "org.springframework.beans.factory.annotation",
-                    buildSimpleAnnotationTypeSpec("Autowired"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder(
-                    "org.springframework.beans.factory.annotation",
-                    buildAnnotationWithValueTypeSpec("Qualifier"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder(
                     "org.springframework.stereotype", buildSimpleAnnotationTypeSpec("Component"))
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject(),
-                JavaFile.builder(
-                        "org.springframework.context.annotation", buildSimpleAnnotationTypeSpec("Lazy"))
-                 .skipJavaLangImports(true)
-                 .build()
-                 .toJavaFileObject(),
-            JavaFile.builder(PACKAGE_NAME, buildConfigClass("MyMappingConfig"))
+            JavaFile.builder(
+                    "org.springframework.context.annotation", buildSimpleAnnotationTypeSpec("Lazy"))
                 .skipJavaLangImports(true)
                 .build()
                 .toJavaFileObject());
   }
 
-  private static TypeSpec buildSimpleAnnotationTypeSpec(final String anotationName) {
-    return TypeSpec.annotationBuilder(anotationName).addModifiers(PUBLIC).build();
-  }
-
-  private static TypeSpec buildAnnotationWithValueTypeSpec(final String anotationName) {
-    return TypeSpec.annotationBuilder(anotationName)
-        .addMethod(
-            MethodSpec.methodBuilder("value")
-                .returns(String.class)
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build())
-        .addModifiers(PUBLIC)
-        .build();
+  private static TypeSpec buildSimpleAnnotationTypeSpec(final String annotationName) {
+    return TypeSpec.annotationBuilder(annotationName).addModifiers(PUBLIC).build();
   }
 
   private static TypeSpec buildGeneratedAnnotationTypeSpec() {
@@ -160,13 +135,18 @@ class ConverterMapperProcessorTest {
         .build();
   }
 
-  private static TypeSpec buildConfigClass(final String className) {
+  private static TypeSpec buildConfigClassWithExternalConversion(final String className) {
     return TypeSpec.interfaceBuilder(className)
         .addModifiers(PUBLIC)
         .addAnnotation(
             AnnotationSpec.builder(
                     ClassName.get("org.mapstruct.extensions.spring", "SpringMapperConfig"))
-                .addMember("conversionServiceBeanName", "$S", "myConversionService")
+                .addMember(
+                    "externalConversions",
+                    "@$T(sourceType = $T.class, targetType = $T.class)",
+                    ExternalConversion.class,
+                    String.class,
+                    Locale.class)
                 .build())
         .build();
   }
@@ -192,7 +172,6 @@ class ConverterMapperProcessorTest {
     final JavaFile mapperFile =
         JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericSourceTypeBuilder().build())
             .build();
-    // e.g. Mapper converting from java.lang.ref.WeakReference<Car> to CarDto
 
     // When
     final boolean compileResult = compile(mapperFile.toJavaFileObject());
@@ -207,7 +186,6 @@ class ConverterMapperProcessorTest {
     final JavaFile mapperFile =
         JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericTargetTypeBuilder().build())
             .build();
-    // e.g. Mapper converting from Car to java.lang.ref.WeakReference<CarDto>
 
     // When
     final boolean compileResult = compile(mapperFile.toJavaFileObject());
@@ -301,5 +279,35 @@ class ConverterMapperProcessorTest {
     then(descriptor.getFromToMappings())
         .hasSize(1)
         .containsExactly(Pair.of(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME));
+  }
+
+  @Test
+  void shouldAddConversionServiceCallsForExternalConversions() throws IOException {
+    // Given
+    final JavaFile mappingConfigFile =
+        JavaFile.builder(
+                PACKAGE_NAME, buildConfigClassWithExternalConversion("StringToLocaleConfig"))
+            .build();
+    final JavaFile mapperFile =
+        JavaFile.builder(
+                PACKAGE_NAME, converterMapperWithoutGenericSourceOrTargetTypeBuilder().build())
+            .build();
+
+    // When
+    final boolean compileResult =
+        compile(mappingConfigFile.toJavaFileObject(), mapperFile.toJavaFileObject());
+
+    // Then
+    then(compileResult).isTrue();
+    BDDMockito.then(adapterGenerator)
+        .should()
+        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+    final ConversionServiceAdapterDescriptor descriptor = descriptorArgumentCaptor.getValue();
+    then(descriptor).isNotNull();
+    then(descriptor.getFromToMappings())
+        .hasSize(2)
+        .containsExactlyInAnyOrder(
+            Pair.of(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME),
+            Pair.of(ClassName.get(String.class), ClassName.get(Locale.class)));
   }
 }
