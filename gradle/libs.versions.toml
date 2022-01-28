@@ -1,4 +1,5 @@
 [versions]
+asciidoctorPlugin = "3.3.2"
 assertj = "3.20.2"
 commons-io = "2.10.0"
 commons-lang3 = "3.12.0"
@@ -9,6 +10,9 @@ jupiter = "5.7.2"
 mapstruct = "1.4.0.Final"
 mockito = "3.11.2"
 spring = "5.0.0.RELEASE"
+springBoot = "2.6.2"
+springDependencyManagement = "1.0.11.RELEASE"
+versionsPlugin = "0.41.0"
 
 [libraries]
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
@@ -31,3 +35,9 @@ spring-test = { group = "org.springframework", name = "spring-test", version.ref
 
 [bundles]
 junit-jupiter = ["junit-jupiter-api", "junit-jupiter-engine", "junit-jupiter-params"]
+
+[plugins]
+asciidoctor = { id = "org.asciidoctor.jvm.convert", version.ref = "asciidoctorPlugin"}
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
+vers = { id = "com.github.ben-manes.versions", version.ref = "versionsPlugin" }

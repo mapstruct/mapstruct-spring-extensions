@@ -3,10 +3,10 @@ plugins {
     id 'jacoco'
     id 'maven-publish'
     id 'signing'
-    id "com.github.ben-manes.versions" version "0.39.0"
-    id "org.springframework.boot" version "2.5.2" apply false
-    id "io.spring.dependency-management" version "1.0.11.RELEASE" apply false
-    id "org.asciidoctor.jvm.convert" version "3.3.2" apply false
+    alias(libs.plugins.vers)
+    alias(libs.plugins.spring.boot) apply false
+    alias(libs.plugins.spring.dependency.management) apply false
+    alias(libs.plugins.asciidoctor) apply false
 }
 
 def isNonStable = { String version ->
@@ -70,8 +70,3 @@ subprojects {
 
     check.dependsOn jacocoTestReport
 }
-
-wrapper {
-    gradleVersion = '7.1.1'
-}
-
