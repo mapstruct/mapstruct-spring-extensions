@@ -1,0 +1,12 @@
+dependencies {
+    annotationProcessor project(":extensions")
+    implementation projects.annotations
+
+    implementation libs.spring.context
+    implementation libs.spring.core
+    implementation libs.mapstruct.core
+    annotationProcessor libs.mapstruct.processor
+
+    testImplementation libs.bundles.junit.jupiter
+    testImplementation libs.mockito
+}
