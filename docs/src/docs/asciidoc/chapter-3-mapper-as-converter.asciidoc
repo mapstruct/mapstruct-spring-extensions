@@ -6,7 +6,7 @@ MapStruct Mappers nicely match Spring's https://docs.spring.io/spring-framework/
 [source, java, linenums]
 [subs="verbatim,attributes"]
 ----
-@Mapper
+@Mapper(componentModel = "spring")
 public interface CarMapper extends Converter<Car, CarDto> {
     @Mapping(target = "seats", source = "seatConfiguration")
     CarDto convert(Car car);
