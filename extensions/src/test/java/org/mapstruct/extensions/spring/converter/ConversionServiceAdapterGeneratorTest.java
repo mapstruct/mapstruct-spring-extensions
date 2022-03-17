@@ -1,18 +1,19 @@
 package org.mapstruct.extensions.spring.converter;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.io.IOUtils.resourceToString;
-import static org.assertj.core.api.BDDAssertions.then;
-
 import com.squareup.javapoet.ClassName;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.Test;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.io.IOUtils.resourceToString;
+import static org.assertj.core.api.BDDAssertions.then;
 
 class ConversionServiceAdapterGeneratorTest {
   private static final Clock FIXED_CLOCK =
@@ -27,13 +28,13 @@ class ConversionServiceAdapterGeneratorTest {
   void shouldGenerateMatchingOutput() throws IOException {
     // Given
     final ConversionServiceAdapterDescriptor descriptor = new ConversionServiceAdapterDescriptor();
-    descriptor.setAdapterClassName(
+    descriptor.adapterClassName(
         ClassName.get(
             ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
             "ConversionServiceAdapter"));
-    descriptor.setFromToMappings(
+    descriptor.fromToMappings(
         singletonList(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto"))));
-    descriptor.setLazyAnnotatedConversionServiceBean(true);
+    descriptor.lazyAnnotatedConversionServiceBean(true);
     final StringWriter outputWriter = new StringWriter();
 
     // When
@@ -48,14 +49,14 @@ class ConversionServiceAdapterGeneratorTest {
   void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
     // Given
     final ConversionServiceAdapterDescriptor descriptor = new ConversionServiceAdapterDescriptor();
-    descriptor.setAdapterClassName(
+    descriptor.adapterClassName(
             ClassName.get(
                     ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
                     "ConversionServiceAdapter"));
-    descriptor.setConversionServiceBeanName("myConversionService");
-    descriptor.setFromToMappings(
+    descriptor.conversionServiceBeanName("myConversionService");
+    descriptor.fromToMappings(
             singletonList(Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto"))));
-    descriptor.setLazyAnnotatedConversionServiceBean(true);
+    descriptor.lazyAnnotatedConversionServiceBean(true);
     final StringWriter outputWriter = new StringWriter();
 
     // When
