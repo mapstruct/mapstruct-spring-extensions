@@ -164,7 +164,7 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private AnnotationSpec buildGeneratedAnnotationSpec() {
-    return AnnotationSpec.builder(ClassName.get("javax.annotation", "Generated"))
+    return AnnotationSpec.builder(ClassName.get("javax.annotation.processing", "Generated"))
         .addMember("value", "$S", ConversionServiceAdapterGenerator.class.getName())
         .addMember("date", "$S", ISO_INSTANT.format(ZonedDateTime.now(clock)))
         .build();
