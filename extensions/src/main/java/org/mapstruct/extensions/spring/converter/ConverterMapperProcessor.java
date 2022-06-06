@@ -24,6 +24,7 @@ import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.SourceVersion.RELEASE_8;
 import static javax.lang.model.element.ElementKind.METHOD;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
@@ -73,12 +74,15 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .conversionServiceBeanName(getConversionServiceName(annotations, roundEnv))
         .lazyAnnotatedConversionServiceBean(
             getLazyAnnotatedConversionServiceBean(annotations, roundEnv))
-        .fromToMappings(getExternalConversionMappings(annotations, roundEnv));
+        .fromToMappings(getExternalConversionMappings(annotations, roundEnv))
+        .elementUtils(processingEnv.getElementUtils())
+        .sourceVersionAtLeast9(processingEnv.getSourceVersion().compareTo(RELEASE_8) > 0);
   }
 
   private List<Pair<TypeName, TypeName>> getExternalConversionMappings(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    final Optional<List<Pair<TypeName, TypeName>>> pairs = annotations.stream()
+    final Optional<List<Pair<TypeName, TypeName>>> pairs =
+        annotations.stream()
             .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
             .findFirst()
             .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
@@ -89,8 +93,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
             .map(AnnotationValue::getValue)
             .map(List.class::cast)
             .map(this::toSourceTargetTypeNamePairs);
-    return pairs
-        .orElse(emptyList());
+    return pairs.orElse(emptyList());
   }
 
   private List<Pair<TypeName, TypeName>> toSourceTargetTypeNamePairs(
@@ -200,7 +203,8 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .getTypeUtils()
         .isSameType(
             getFirstParameterType(convert),
-            getFirstTypeArgument(getConverterSupertype(mapper).orElseThrow(NoSuchElementException::new)));
+            getFirstTypeArgument(
+                getConverterSupertype(mapper).orElseThrow(NoSuchElementException::new)));
   }
 
   private static boolean hasExactlyOneParameter(final ExecutableElement convert) {
