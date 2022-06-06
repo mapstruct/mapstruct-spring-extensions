@@ -9,6 +9,7 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Optional;
 
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 import static java.util.stream.Collectors.toList;
@@ -47,9 +48,11 @@ public class ConversionServiceAdapterGenerator {
   private TypeSpec createConversionServiceTypeSpec(
       final ConversionServiceAdapterDescriptor descriptor) {
     final FieldSpec conversionServiceFieldSpec = buildConversionServiceFieldSpec();
-    return TypeSpec.classBuilder(descriptor.getAdapterClassName())
-        .addModifiers(PUBLIC)
-        .addAnnotation(buildGeneratedAnnotationSpec())
+    final TypeSpec.Builder adapterClassTypeSpec =
+        TypeSpec.classBuilder(descriptor.getAdapterClassName()).addModifiers(PUBLIC);
+    Optional.ofNullable(buildGeneratedAnnotationSpec(descriptor))
+        .ifPresent(adapterClassTypeSpec::addAnnotation);
+    return adapterClassTypeSpec
         .addAnnotation(ClassName.get("org.springframework.stereotype", "Component"))
         .addField(conversionServiceFieldSpec)
         .addMethod(buildConstructorSpec(descriptor, conversionServiceFieldSpec))
@@ -163,10 +166,28 @@ public class ConversionServiceAdapterGenerator {
         .build();
   }
 
-  private AnnotationSpec buildGeneratedAnnotationSpec() {
-    return AnnotationSpec.builder(ClassName.get("javax.annotation", "Generated"))
-        .addMember("value", "$S", ConversionServiceAdapterGenerator.class.getName())
-        .addMember("date", "$S", ISO_INSTANT.format(ZonedDateTime.now(clock)))
-        .build();
+  private AnnotationSpec buildGeneratedAnnotationSpec(
+      ConversionServiceAdapterDescriptor descriptor) {
+    final AnnotationSpec.Builder builder;
+    if (descriptor.isSourceVersionAtLeast9()
+        && isTypeAvailable(descriptor, "javax.annotation.processing.Generated")) {
+      builder = AnnotationSpec.builder(ClassName.get("javax.annotation.processing", "Generated"));
+    } else if (isTypeAvailable(descriptor, "javax.annotation.Generated")) {
+      builder = AnnotationSpec.builder(ClassName.get("javax.annotation", "Generated"));
+    } else {
+      builder = null;
+    }
+    return Optional.ofNullable(builder)
+        .map(
+            build ->
+                build.addMember("value", "$S", ConversionServiceAdapterGenerator.class.getName()))
+        .map(build -> build.addMember("date", "$S", ISO_INSTANT.format(ZonedDateTime.now(clock))))
+        .map(AnnotationSpec.Builder::build)
+        .orElse(null);
+  }
+
+  private static boolean isTypeAvailable(
+      final ConversionServiceAdapterDescriptor descriptor, final String name) {
+    return descriptor.getElementUtils().getTypeElement(name) != null;
   }
 }
