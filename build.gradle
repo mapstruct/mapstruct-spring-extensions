@@ -3,6 +3,7 @@ plugins {
     id 'jacoco'
     id 'maven-publish'
     id 'signing'
+    alias(libs.plugins.jreleaser) apply false
     alias(libs.plugins.vers)
     alias(libs.plugins.spring.boot) apply false
     alias(libs.plugins.spring.dependency.management) apply false
