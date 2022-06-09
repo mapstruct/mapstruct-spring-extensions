@@ -1,18 +1,18 @@
 [versions]
 asciidoctorPlugin = "3.3.2"
-assertj = "3.20.2"
-commons-io = "2.10.0"
+assertj = "3.23.1"
+commons-io = "2.11.0"
 commons-lang3 = "3.12.0"
-guava = "30.1.1-jre"
+guava = "31.1-jre"
 javapoet = "1.13.0"
 jsr250 = "1.0"
-jupiter = "5.7.2"
+jupiter = "5.8.2"
 mapstruct = "1.4.0.Final"
-mockito = "3.11.2"
+mockito = "4.6.1"
 spring = "5.0.0.RELEASE"
-springBoot = "2.6.2"
+springBoot = "2.7.0"
 springDependencyManagement = "1.0.11.RELEASE"
-versionsPlugin = "0.41.0"
+versionsPlugin = "0.42.0"
 
 [libraries]
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
