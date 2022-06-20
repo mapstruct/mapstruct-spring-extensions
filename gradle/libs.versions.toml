@@ -3,6 +3,7 @@ asciidoctorPlugin = "3.3.2"
 assertj = "3.23.1"
 commons-io = "2.11.0"
 commons-lang3 = "3.12.0"
+compile-testing = "0.19"
 guava = "31.1-jre"
 javapoet = "1.13.0"
 jsr250 = "1.0"
@@ -18,6 +19,7 @@ versionsPlugin = "0.42.0"
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
 commons-io = { group = "commons-io", name = "commons-io", version.ref = "commons-io" }
 commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "commons-lang3" }
+compile-testing = { group = "com.google.testing.compile", name = "compile-testing", version.ref = "compile-testing" }
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 javapoet = { group = "com.squareup", name = "javapoet", version.ref = "javapoet"}
 jsr250 = { group = "javax.annotation", name = "jsr250-api", version.ref = "jsr250" }

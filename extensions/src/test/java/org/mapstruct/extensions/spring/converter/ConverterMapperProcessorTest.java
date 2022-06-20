@@ -12,8 +12,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
 
-import javax.tools.*;
-import java.io.IOException;
+import javax.tools.JavaFileObject;
 import java.io.Writer;
 import java.lang.ref.WeakReference;
 import java.time.Clock;
@@ -21,12 +20,11 @@ import java.util.Locale;
 import java.util.Set;
 
 import static com.google.common.collect.Iterables.concat;
-import static java.nio.file.Files.createTempDirectory;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static com.google.common.collect.Iterables.toArray;
+import static com.google.testing.compile.JavaSourcesSubject.assertThat;
 import static javax.lang.model.element.Modifier.*;
-import static javax.tools.StandardLocation.CLASS_OUTPUT;
 import static org.assertj.core.api.BDDAssertions.then;
+import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,29 +42,6 @@ class ConverterMapperProcessorTest {
 
   private static Set<JavaFileObject> commonCompilationUnits;
   private static final String PACKAGE_NAME = "test";
-
-  private boolean compile(JavaFileObject... additionalCompilationUnits) throws IOException {
-    final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-
-    final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-    final StandardJavaFileManager fileManager =
-        compiler.getStandardFileManager(diagnostics, null, null);
-    fileManager.setLocation(CLASS_OUTPUT, singletonList(createTempDirectory("classes").toFile()));
-
-    final JavaCompiler.CompilationTask task =
-        compiler.getTask(
-            null,
-            fileManager,
-            diagnostics,
-            null,
-            null,
-            concat(commonCompilationUnits, asList(additionalCompilationUnits)));
-    task.setProcessors(singletonList(processor));
-
-    final boolean success = task.call();
-    diagnostics.getDiagnostics().forEach(System.err::println);
-    return success;
-  }
 
   @BeforeAll
   static void setupCommonSourceFiles() {
@@ -152,46 +127,67 @@ class ConverterMapperProcessorTest {
   }
 
   @Test
-  void shouldCompileSimpleConverterMapper() throws IOException {
+  void shouldCompileSimpleConverterMapper() {
     // Given
     final JavaFile mapperFile =
         JavaFile.builder(
                 PACKAGE_NAME, converterMapperWithoutGenericSourceOrTargetTypeBuilder().build())
             .build();
 
-    // When
-    final boolean compileResult = compile(mapperFile.toJavaFileObject());
-
-    // Then
-    then(compileResult).isTrue();
+    // When - Then
+    assertThat(mapperFile.toJavaFileObject(), commonCompilationUnits.toArray(new JavaFileObject[0]))
+        .processedWith(processor)
+        .compilesWithoutError();
+    BDDMockito.then(adapterGenerator)
+        .should()
+        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+    then(descriptorArgumentCaptor.getValue())
+        .isNotNull()
+        .extracting(ConversionServiceAdapterDescriptor::getFromToMappings)
+        .asInstanceOf(list(Pair.class))
+        .containsExactly(Pair.of(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME));
   }
 
   @Test
-  void shouldCompileConverterMapperWithGenericSourceType() throws IOException {
+  void shouldCompileConverterMapperWithGenericSourceType() {
     // Given
     final JavaFile mapperFile =
         JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericSourceTypeBuilder().build())
             .build();
 
-    // When
-    final boolean compileResult = compile(mapperFile.toJavaFileObject());
-
-    // Then
-    then(compileResult).isTrue();
+    // When - Then
+    assertThat(mapperFile.toJavaFileObject(), commonCompilationUnits.toArray(new JavaFileObject[0]))
+        .processedWith(processor)
+        .compilesWithoutError();
+    BDDMockito.then(adapterGenerator)
+        .should()
+        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+    then(descriptorArgumentCaptor.getValue())
+        .isNotNull()
+        .extracting(ConversionServiceAdapterDescriptor::getFromToMappings)
+        .asInstanceOf(list(Pair.class))
+        .containsExactly(Pair.of(genericSourceTypeName(), CAR_DTO_CLASS_NAME));
   }
 
   @Test
-  void shouldCompileConverterMapperWithGenericTargetType() throws IOException {
+  void shouldCompileConverterMapperWithGenericTargetType() {
     // Given
     final JavaFile mapperFile =
         JavaFile.builder(PACKAGE_NAME, converterMapperWithGenericTargetTypeBuilder().build())
             .build();
 
-    // When
-    final boolean compileResult = compile(mapperFile.toJavaFileObject());
-
-    // Then
-    then(compileResult).isTrue();
+    // When - Then
+    assertThat(mapperFile.toJavaFileObject(), commonCompilationUnits.toArray(new JavaFileObject[0]))
+        .processedWith(processor)
+        .compilesWithoutError();
+    BDDMockito.then(adapterGenerator)
+        .should()
+        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+    then(descriptorArgumentCaptor.getValue())
+        .isNotNull()
+        .extracting(ConversionServiceAdapterDescriptor::getFromToMappings)
+        .asInstanceOf(list(Pair.class))
+        .containsExactly(Pair.of(CAR_CLASS_NAME, genericTargetTypeName()));
   }
 
   private static TypeSpec.Builder converterMapperWithoutGenericSourceOrTargetTypeBuilder() {
@@ -207,15 +203,23 @@ class ConverterMapperProcessorTest {
   }
 
   private static TypeSpec.Builder converterMapperWithGenericSourceTypeBuilder() {
-    return converterMapperBuilder(
-        ParameterizedTypeName.get(ClassName.get(WeakReference.class), CAR_CLASS_NAME),
-        CAR_DTO_CLASS_NAME);
+    return converterMapperBuilder(genericSourceTypeName(), CAR_DTO_CLASS_NAME);
+  }
+
+  private static ParameterizedTypeName genericSourceTypeName() {
+    return genericTypeName(CAR_CLASS_NAME);
+  }
+
+  private static ParameterizedTypeName genericTypeName(final ClassName wrappedClassName) {
+    return ParameterizedTypeName.get(ClassName.get(WeakReference.class), wrappedClassName);
   }
 
   private static TypeSpec.Builder converterMapperWithGenericTargetTypeBuilder() {
-    return converterMapperBuilder(
-        CAR_CLASS_NAME,
-        ParameterizedTypeName.get(ClassName.get(WeakReference.class), CAR_DTO_CLASS_NAME));
+    return converterMapperBuilder(CAR_CLASS_NAME, genericTargetTypeName());
+  }
+
+  private static ParameterizedTypeName genericTargetTypeName() {
+    return genericTypeName(CAR_DTO_CLASS_NAME);
   }
 
   private static TypeSpec.Builder plainCarMapperBuilder(
@@ -235,18 +239,19 @@ class ConverterMapperProcessorTest {
   }
 
   @Test
-  void shouldIgnoreNonConverterMappers() throws IOException {
+  void shouldIgnoreNonConverterMappers() {
     // Given
     final JavaFile plainMapperFile =
         JavaFile.builder(
                 PACKAGE_NAME, plainCarMapperBuilder(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME).build())
             .build();
 
-    // When
-    final boolean compileResult = compile(plainMapperFile.toJavaFileObject());
-
-    // Then
-    then(compileResult).isTrue();
+    // When - Then
+    assertThat(
+            plainMapperFile.toJavaFileObject(),
+            commonCompilationUnits.toArray(new JavaFileObject[0]))
+        .processedWith(processor)
+        .compilesWithoutError();
     BDDMockito.then(adapterGenerator)
         .should()
         .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
@@ -256,7 +261,7 @@ class ConverterMapperProcessorTest {
   }
 
   @Test
-  void shouldProcessOnlyConvertMethodForMapperWithMultipleMethods() throws IOException {
+  void shouldProcessOnlyConvertMethodForMapperWithMultipleMethods() {
     // Given
     final JavaFile mapperFile =
         JavaFile.builder(
@@ -266,11 +271,10 @@ class ConverterMapperProcessorTest {
                     .build())
             .build();
 
-    // When
-    final boolean compileResult = compile(mapperFile.toJavaFileObject());
-
-    // Then
-    then(compileResult).isTrue();
+    // When - Then
+    assertThat(mapperFile.toJavaFileObject(), commonCompilationUnits.toArray(new JavaFileObject[0]))
+        .processedWith(processor)
+        .compilesWithoutError();
     BDDMockito.then(adapterGenerator)
         .should()
         .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
@@ -282,7 +286,7 @@ class ConverterMapperProcessorTest {
   }
 
   @Test
-  void shouldAddConversionServiceCallsForExternalConversions() throws IOException {
+  void shouldAddConversionServiceCallsForExternalConversions() {
     // Given
     final JavaFile mappingConfigFile =
         JavaFile.builder(
@@ -293,12 +297,14 @@ class ConverterMapperProcessorTest {
                 PACKAGE_NAME, converterMapperWithoutGenericSourceOrTargetTypeBuilder().build())
             .build();
 
-    // When
-    final boolean compileResult =
-        compile(mappingConfigFile.toJavaFileObject(), mapperFile.toJavaFileObject());
-
-    // Then
-    then(compileResult).isTrue();
+    // When - Then
+    assertThat(
+            mapperFile.toJavaFileObject(),
+            toArray(
+                concat(Set.of(mappingConfigFile.toJavaFileObject()), commonCompilationUnits),
+                JavaFileObject.class))
+        .processedWith(processor)
+        .compilesWithoutError();
     BDDMockito.then(adapterGenerator)
         .should()
         .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
