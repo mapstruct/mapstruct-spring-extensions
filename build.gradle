@@ -3,10 +3,11 @@ plugins {
     id 'jacoco'
     id 'maven-publish'
     id 'signing'
-    alias(libs.plugins.vers)
+    alias(libs.plugins.asciidoctor) apply false
+    alias(libs.plugins.dependencycheck)
     alias(libs.plugins.spring.boot) apply false
     alias(libs.plugins.spring.dependency.management) apply false
-    alias(libs.plugins.asciidoctor) apply false
+    alias(libs.plugins.vers)
 }
 
 def isNonStable = { String version ->
@@ -36,6 +37,16 @@ dependencyUpdates {
 allprojects {
     repositories {
         mavenCentral()
+    }
+
+    dependencyCheck {
+        analyzers {
+            assemblyEnabled = false
+            nodeEnabled = false
+            nodeAuditEnabled = false
+            nugetconfEnabled = false
+            nuspecEnabled = false
+        }
     }
 }
 
