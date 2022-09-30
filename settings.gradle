@@ -12,6 +12,7 @@ include "examples:custom-conversion-service-bean"
 include "examples:simple-springboot"
 include "examples:external-conversions"
 include "examples:arrays"
+include "examples:no-explicit-convert"
 include "docs"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

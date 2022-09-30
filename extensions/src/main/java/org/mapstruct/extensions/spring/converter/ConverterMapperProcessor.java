@@ -25,8 +25,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.SourceVersion.RELEASE_8;
-import static javax.lang.model.element.ElementKind.METHOD;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.tools.Diagnostic.Kind.ERROR;
 
@@ -158,9 +156,8 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         roundEnv.getElementsAnnotatedWith(annotation).stream()
             .filter(ConverterMapperProcessor::isKindDeclared)
             .filter(this::hasConverterSupertype)
-            .map(this::toConvertMethod)
+            .map(this::toTypeArguments)
             .filter(Objects::nonNull)
-            .map(ExecutableElement.class::cast)
             .map(ConverterMapperProcessor::toFromToMapping)
             .collect(toCollection(ArrayList::new));
     fromToMappings.addAll(descriptor.getFromToMappings());
@@ -176,55 +173,16 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return mapper.asType().getKind() == DECLARED;
   }
 
-  private static Pair<TypeName, TypeName> toFromToMapping(final ExecutableElement convert) {
-    return Pair.of(
-        convert.getParameters().stream()
-            .map(Element::asType)
-            .map(TypeName::get)
-            .findFirst()
-            .orElseThrow(NoSuchElementException::new),
-        TypeName.get(convert.getReturnType()));
+  private static Pair<TypeName, TypeName> toFromToMapping(final List<? extends TypeMirror> sourceTypeTargetType) {
+    return Pair.of(TypeName.get(sourceTypeTargetType.get(0)), TypeName.get(sourceTypeTargetType.get(1)));
   }
 
-  private Element toConvertMethod(final Element mapper) {
-    return mapper.getEnclosedElements().stream()
-        .filter(ConverterMapperProcessor::isAMethod)
-        .filter(ConverterMapperProcessor::isPublic)
-        .filter(ConverterMapperProcessor::hasNameConvert)
-        .map(ExecutableElement.class::cast)
-        .filter(ConverterMapperProcessor::hasExactlyOneParameter)
-        .filter(convert -> parameterTypeMatches(convert, mapper))
-        .findFirst()
-        .orElse(null);
-  }
-
-  private boolean parameterTypeMatches(final ExecutableElement convert, final Element mapper) {
-    return processingEnv
-        .getTypeUtils()
-        .isSameType(
-            getFirstParameterType(convert),
-            getFirstTypeArgument(
-                getConverterSupertype(mapper).orElseThrow(NoSuchElementException::new)));
-  }
-
-  private static boolean hasExactlyOneParameter(final ExecutableElement convert) {
-    return convert.getParameters().size() == 1;
-  }
-
-  private static boolean hasNameConvert(final Element method) {
-    return hasName(method.getSimpleName(), "convert");
+  private List<? extends TypeMirror> toTypeArguments(final Element mapper) {
+    return ((DeclaredType) getConverterSupertype(mapper).orElseThrow()).getTypeArguments();
   }
 
   private static boolean hasName(final Name name, final String comparisonName) {
     return name.contentEquals(comparisonName);
-  }
-
-  private static boolean isPublic(final Element method) {
-    return method.getModifiers().contains(PUBLIC);
-  }
-
-  private static boolean isAMethod(final Element element) {
-    return element.getKind() == METHOD;
   }
 
   private void writeAdapterClassFile(final ConversionServiceAdapterDescriptor descriptor) {
@@ -356,13 +314,5 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .erasure(supertype)
         .toString()
         .equals(SPRING_CONVERTER_FULL_NAME);
-  }
-
-  private static TypeMirror getFirstParameterType(final ExecutableElement convert) {
-    return convert.getParameters().stream().findFirst().map(Element::asType).orElse(null);
-  }
-
-  private static TypeMirror getFirstTypeArgument(final TypeMirror converterSupertype) {
-    return ((DeclaredType) converterSupertype).getTypeArguments().stream().findFirst().orElse(null);
   }
 }
