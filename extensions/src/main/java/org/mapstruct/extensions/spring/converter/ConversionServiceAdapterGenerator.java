@@ -1,19 +1,19 @@
 package org.mapstruct.extensions.spring.converter;
 
-import com.squareup.javapoet.*;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.Modifier.*;
 
+import com.squareup.javapoet.*;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.Optional;
-
-import static java.time.format.DateTimeFormatter.ISO_INSTANT;
-import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.*;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ConversionServiceAdapterGenerator {
   private static final String CONVERSION_SERVICE_PACKAGE_NAME = "org.springframework.core.convert";
@@ -101,6 +101,30 @@ public class ConversionServiceAdapterGenerator {
         .build();
   }
 
+  private static String nestedTypeName(final ParameterizedTypeName parameterizedTypeName) {
+    if (parameterizedTypeName.typeArguments != null && parameterizedTypeName.typeArguments.size() > 0) {
+      try {
+        if (isCollection(parameterizedTypeName)) {
+          return simpleName(parameterizedTypeName) + "Of" + nestedNameIfApplicable(parameterizedTypeName.typeArguments.iterator().next());
+        }
+      } catch (ClassNotFoundException e) {
+        // TODO: Log warning
+      }
+    }
+    return simpleName(parameterizedTypeName);
+  }
+
+  private static boolean isCollection(ParameterizedTypeName parameterizedTypeName) throws ClassNotFoundException {
+    return Collection.class.isAssignableFrom(Class.forName(parameterizedTypeName.toString()));
+  }
+
+  private static String nestedNameIfApplicable(final TypeName typeName) {
+    if (typeName instanceof ParameterizedTypeName) {
+      return nestedTypeName((ParameterizedTypeName)typeName);
+    }
+    return simpleName(typeName);
+  }
+
   private static String simpleName(final TypeName typeName) {
     final TypeName rawType = rawType(typeName);
     if (rawType instanceof ArrayTypeName) {
@@ -141,7 +165,7 @@ public class ConversionServiceAdapterGenerator {
     return MethodSpec.methodBuilder(
             String.format(
                 "map%sTo%s",
-                simpleName(sourceTargetPair.getLeft()), simpleName(sourceTargetPair.getRight())))
+                nestedNameIfApplicable(sourceTargetPair.getLeft()), nestedNameIfApplicable(sourceTargetPair.getRight())))
         .addParameter(sourceParameterSpec)
         .addModifiers(PUBLIC)
         .returns(sourceTargetPair.getRight())
