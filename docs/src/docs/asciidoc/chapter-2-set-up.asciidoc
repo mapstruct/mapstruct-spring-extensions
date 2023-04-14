@@ -1,7 +1,7 @@
 [[setup]]
 == Set up
 
-MapStruct Spring Extensions is a Java annotation processor based on http://www.jcp.org/en/jsr/detail?id=269[JSR 269] and as such can be used within command line builds (javac, Ant, Maven etc.) as well as from within your IDE.
+MapStruct Spring Extensions is a Java annotation processor based on http://www.jcp.org/en/jsr/detail?id=269[JSR 269] and as such can be used within command line builds (javac, Ant, Maven etc.) as well as from within your IDE. The minimum JDK version is 11.
 
 IMPORTANT: Also, you will need MapStruct itself (at least version `1.4.0.Final`) in your project.
 
