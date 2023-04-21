@@ -1,19 +1,24 @@
 package org.mapstruct.extensions.spring.converter;
 
-import com.squareup.javapoet.*;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
+import static java.time.format.DateTimeFormatter.ISO_INSTANT;
+import static java.util.stream.Collectors.toList;
+import static javax.lang.model.element.Modifier.*;
+import static javax.tools.Diagnostic.Kind.WARNING;
 
+import com.squareup.javapoet.*;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
-
-import static java.time.format.DateTimeFormatter.ISO_INSTANT;
-import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.*;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.processing.ProcessingEnvironment;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class ConversionServiceAdapterGenerator {
   private static final String CONVERSION_SERVICE_PACKAGE_NAME = "org.springframework.core.convert";
@@ -25,13 +30,22 @@ public class ConversionServiceAdapterGenerator {
   private static final String LAZY_ANNOTATION_PACKAGE_NAME =
       "org.springframework.context.annotation";
   private static final String LAZY_ANNOTATION_CLASS_NAME = "Lazy";
+  private static final ClassName TYPE_DESCRIPTOR_CLASS_NAME = ClassName.get("org.springframework.core.convert", "TypeDescriptor");
 
   private final Clock clock;
 
+  private final AtomicReference<ProcessingEnvironment> processingEnvironment;
+
   public ConversionServiceAdapterGenerator(final Clock clock) {
     this.clock = clock;
+    processingEnvironment = new AtomicReference<>();
   }
 
+  
+  ProcessingEnvironment getProcessingEnvironment() {
+    return processingEnvironment.get();
+  }
+  
   public void writeConversionServiceAdapter(
       final ConversionServiceAdapterDescriptor descriptor, final Writer out) {
     try {
@@ -101,6 +115,45 @@ public class ConversionServiceAdapterGenerator {
         .build();
   }
 
+  private String collectionOfMethodName(final ParameterizedTypeName parameterizedTypeName) {
+    if (isCollectionWithGenericParameter(parameterizedTypeName)) {
+      return simpleName(parameterizedTypeName)
+          + "Of"
+          + collectionOfNameIfApplicable(parameterizedTypeName.typeArguments.iterator().next());
+    }
+
+    return simpleName(parameterizedTypeName);
+  }
+
+  private boolean isCollectionWithGenericParameter(final ParameterizedTypeName parameterizedTypeName) {
+    return parameterizedTypeName.typeArguments != null
+            && parameterizedTypeName.typeArguments.size() > 0
+            && isCollection(parameterizedTypeName);
+  }
+
+  private boolean isCollection(final ParameterizedTypeName parameterizedTypeName) {
+    try {
+      return Collection.class.isAssignableFrom(
+          Class.forName(parameterizedTypeName.rawType.canonicalName()));
+    } catch (ClassNotFoundException e) {
+      processingEnvironment
+          .get()
+          .getMessager()
+          .printMessage(
+              WARNING,
+              "Caught ClassNotFoundException when trying to resolve parameterized type: "
+                  + e.getMessage());
+      return false;
+    }
+  }
+
+  private String collectionOfNameIfApplicable(final TypeName typeName) {
+    if (typeName instanceof ParameterizedTypeName) {
+      return collectionOfMethodName((ParameterizedTypeName) typeName);
+    }
+    return simpleName(typeName);
+  }
+
   private static String simpleName(final TypeName typeName) {
     final TypeName rawType = rawType(typeName);
     if (rawType instanceof ArrayTypeName) {
@@ -124,9 +177,9 @@ public class ConversionServiceAdapterGenerator {
     return typeName;
   }
 
-  private static Iterable<MethodSpec> buildMappingMethods(
-      final ConversionServiceAdapterDescriptor descriptor,
-      final FieldSpec injectedConversionServiceFieldSpec) {
+  private Iterable<MethodSpec> buildMappingMethods(
+          final ConversionServiceAdapterDescriptor descriptor,
+          final FieldSpec injectedConversionServiceFieldSpec) {
     return descriptor.getFromToMappings().stream()
         .map(
             sourceTargetPair ->
@@ -134,23 +187,64 @@ public class ConversionServiceAdapterGenerator {
         .collect(toList());
   }
 
-  private static MethodSpec toMappingMethodSpec(
-      final FieldSpec injectedConversionServiceFieldSpec,
-      final Pair<TypeName, TypeName> sourceTargetPair) {
+  private MethodSpec toMappingMethodSpec(
+          final FieldSpec injectedConversionServiceFieldSpec,
+          final Pair<TypeName, TypeName> sourceTargetPair) {
     final ParameterSpec sourceParameterSpec = buildSourceParameterSpec(sourceTargetPair.getLeft());
     return MethodSpec.methodBuilder(
             String.format(
                 "map%sTo%s",
-                simpleName(sourceTargetPair.getLeft()), simpleName(sourceTargetPair.getRight())))
+                collectionOfNameIfApplicable(sourceTargetPair.getLeft()),
+                collectionOfNameIfApplicable(sourceTargetPair.getRight())))
         .addParameter(sourceParameterSpec)
         .addModifiers(PUBLIC)
         .returns(sourceTargetPair.getRight())
         .addStatement(
-            "return $N.convert($N, $T.class)",
-            injectedConversionServiceFieldSpec,
-            sourceParameterSpec,
-            rawType(sourceTargetPair.getRight()))
+            String.format(
+                "return ($T) $N.convert($N, %s, %s)",
+                typeDescriptorFormat(sourceTargetPair.getLeft()),
+                typeDescriptorFormat(sourceTargetPair.getRight())),
+                allTypeDescriptorArguments(injectedConversionServiceFieldSpec, sourceParameterSpec, sourceTargetPair))
         .build();
+  }
+
+  private Object[] allTypeDescriptorArguments(
+      final FieldSpec injectedConversionServiceFieldSpec,
+      final ParameterSpec sourceParameterSpec,
+      final Pair<TypeName, TypeName> sourceTargetPair) {
+    final var arguments = new ArrayList<>();
+    arguments.add(sourceTargetPair.getRight());
+    arguments.add(injectedConversionServiceFieldSpec);
+    arguments.add(sourceParameterSpec);
+    arguments.addAll(typeDescriptorArguments(sourceTargetPair.getLeft()));
+    arguments.addAll(typeDescriptorArguments(sourceTargetPair.getRight()));
+    return arguments.toArray();
+  }
+
+  private String typeDescriptorFormat(final TypeName typeName) {
+    if (typeName instanceof ParameterizedTypeName
+            && isCollectionWithGenericParameter((ParameterizedTypeName) typeName)) {
+      return String.format(
+              "$T.collection($T.class, %s)",
+              typeDescriptorFormat(((ParameterizedTypeName) typeName).typeArguments.iterator().next()));
+    }
+    return "$T.valueOf($T.class)";
+  }
+
+  private List<Object> typeDescriptorArguments(final TypeName typeName) {
+    final List<Object> allArguments;
+    if (typeName instanceof ParameterizedTypeName
+        && isCollectionWithGenericParameter((ParameterizedTypeName) typeName)) {
+      allArguments = new ArrayList<>();
+      allArguments.add(TYPE_DESCRIPTOR_CLASS_NAME);
+      allArguments.add(((ParameterizedTypeName) typeName).rawType);
+      allArguments.addAll(
+          typeDescriptorArguments(
+              ((ParameterizedTypeName) typeName).typeArguments.iterator().next()));
+    } else {
+      allArguments = List.of(TYPE_DESCRIPTOR_CLASS_NAME, rawType(typeName));
+    }
+    return allArguments;
   }
 
   private static ParameterSpec buildSourceParameterSpec(final TypeName sourceClassName) {
@@ -167,7 +261,7 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private AnnotationSpec buildGeneratedAnnotationSpec(
-      ConversionServiceAdapterDescriptor descriptor) {
+      final ConversionServiceAdapterDescriptor descriptor) {
     final AnnotationSpec.Builder builder;
     if (descriptor.isSourceVersionAtLeast9()
         && isTypeAvailable(descriptor, "javax.annotation.processing.Generated")) {
@@ -189,5 +283,11 @@ public class ConversionServiceAdapterGenerator {
   private static boolean isTypeAvailable(
       final ConversionServiceAdapterDescriptor descriptor, final String name) {
     return descriptor.getElementUtils().getTypeElement(name) != null;
+  }
+
+  public void init(final ProcessingEnvironment processingEnv) {
+    if (!this.processingEnvironment.compareAndSet(null, processingEnv)) {
+      throw new IllegalStateException("ProcessingEnvironment already set.");
+    }
   }
 }

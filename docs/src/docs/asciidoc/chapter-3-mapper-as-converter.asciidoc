@@ -29,7 +29,7 @@ This allows using the Mapper indirectly via the `ConversionService`:
 ----
 ====
 
-All this can be achieved already with MapStruct's core functionality. However, when a Mapper wants to https://mapstruct.org/documentation/stable/reference/html/#invoking-other-mappers[invoke] another one, it can't take the route via the `ConversionService`, because the latter's `convert` method does not match the signature that MapStruct expects for a mapping method. Thus, the developer still has to add every invoked Mapper to the invoking Mapper's `uses` element. This creates (aside from a potentially long list) a tight coupling between Mappers that the `ConversionService` wants to avoid.
+All this can be achieved already with MapStruct's core functionality. However, when a Mapper wants to https://mapstruct.org/documentation/stable/reference/html/#invoking-other-mappers[invoke] another one, it can't take the route via the `ConversionService`, because the latter's `convert` method does not match the signature that MapStruct expects for a mapping method. Thus, the developer still has to add every invoked Mapper to the invoking Mapper's `uses` element. This creates (aside from a potentially long list) a tight coupling between Mappers that the `ConversionService` is designed to avoid.
 
 This is where MapStruct Spring Extensions can help. Including the two artifacts in your build will generate an Adapter class that _can_ be used by an invoking Mapper. Let's say that the above CarMapper is accompanied by a SeatConfigurationMapper:
 
@@ -61,12 +61,12 @@ public class ConversionServiceAdapter {
   }
 
   public CarDto mapCarToCarDto(final Car source) {
-    return conversionService.convert(source, CarDto.class);
+    return (CarDto) conversionService.convert(source, TypeDescriptor.valueOf(Car.class), TypeDescriptor.valueOf(CarDto.class));
   }
 
   public SeatConfigurationDto mapSeatConfigurationToSeatConfigurationDto(
       final SeatConfiguration source) {
-    return conversionService.convert(source, SeatConfigurationDto.class);
+    return (SeatConfigurationDto) conversionService.convert(source, TypeDescriptor.valueOf(SeatConfiguration.class), TypeDescriptor.valueOf(SeatConfigurationDto.class));
   }
 }
 ----
@@ -165,7 +165,7 @@ public class ConversionServiceAdapter {
   }
 
   public Locale mapStringToLocale(final String source) {
-    return conversionService.convert(source, Locale.class);
+    return (Locale) conversionService.convert(source, TypeDescriptor.valueOf(String.class), TypeDescriptor.valueOf(Locale.class));
   }
 }
 ----
