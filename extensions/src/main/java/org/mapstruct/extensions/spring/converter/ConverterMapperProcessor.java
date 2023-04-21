@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -48,6 +49,12 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   ConverterMapperProcessor(final ConversionServiceAdapterGenerator adapterGenerator) {
     super();
     this.adapterGenerator = adapterGenerator;
+  }
+
+  @Override
+  public synchronized void init(final ProcessingEnvironment processingEnv) {
+    super.init(processingEnv);
+    adapterGenerator.init(processingEnv);
   }
 
   @Override

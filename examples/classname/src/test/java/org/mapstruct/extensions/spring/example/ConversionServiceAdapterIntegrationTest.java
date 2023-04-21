@@ -7,6 +7,7 @@ import org.mapstruct.extensions.spring.example.classname.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.stereotype.Component;
@@ -64,6 +65,10 @@ public class ConversionServiceAdapterIntegrationTest {
     then(conversionService.canConvert(Wheel.class, WheelDto.class)).isTrue();
     then(conversionService.canConvert(Wheels.class, List.class)).isTrue();
     then(conversionService.canConvert(List.class, Wheels.class)).isTrue();
+    then(conversionService.canConvert(
+            TypeDescriptor.collection(List.class, TypeDescriptor.valueOf(WheelDto.class)),
+            TypeDescriptor.valueOf((Wheels.class))))
+            .isTrue();
   }
 
   @Test
