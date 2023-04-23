@@ -1,9 +1,13 @@
 package org.mapstruct.extensions.spring.converter;
 
+import static java.lang.Boolean.TRUE;
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
+import static javax.lang.model.SourceVersion.RELEASE_8;
 import static javax.lang.model.element.Modifier.*;
 import static javax.tools.Diagnostic.Kind.WARNING;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import com.squareup.javapoet.*;
 import java.io.IOException;
@@ -11,27 +15,42 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.time.Clock;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import javax.annotation.processing.ProcessingEnvironment;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class ConversionServiceAdapterGenerator {
-  private static final String CONVERSION_SERVICE_PACKAGE_NAME = "org.springframework.core.convert";
-  private static final String CONVERSION_SERVICE_CLASS_NAME = "ConversionService";
+  private static final ClassName CONVERSION_SERVICE_CLASS_NAME =
+      ClassName.get("org.springframework.core.convert", "ConversionService");
   private static final String CONVERSION_SERVICE_FIELD_NAME = "conversionService";
-  private static final String QUALIFIER_ANNOTATION_PACKAGE_NAME =
-      "org.springframework.beans.factory.annotation";
-  private static final String QUALIFIER_ANNOTATION_CLASSS_NAME = "Qualifier";
-  private static final String LAZY_ANNOTATION_PACKAGE_NAME =
-      "org.springframework.context.annotation";
-  private static final String LAZY_ANNOTATION_CLASS_NAME = "Lazy";
-  private static final ClassName TYPE_DESCRIPTOR_CLASS_NAME = ClassName.get("org.springframework.core.convert", "TypeDescriptor");
-
+  private static final ClassName QUALIFIER_ANNOTATION_CLASS_NAME =
+      ClassName.get("org.springframework.beans.factory.annotation", "Qualifier");
+  private static final ClassName LAZY_ANNOTATION_CLASS_NAME =
+      ClassName.get("org.springframework.context.annotation", "Lazy");
+  private static final ClassName TYPE_DESCRIPTOR_CLASS_NAME =
+      ClassName.get("org.springframework.core.convert", "TypeDescriptor");
+  private static final String GENERATED_ANNOTATION_CLASS_NAME_STRING = "Generated";
+  private static final String PRE_JAVA_9_ANNOTATION_GENERATED_PACKAGE = "javax.annotation";
+  private static final ClassName PRE_JAVA_9_ANNOTATION_GENERATED_CLASS_NAME =
+      ClassName.get(
+          PRE_JAVA_9_ANNOTATION_GENERATED_PACKAGE, GENERATED_ANNOTATION_CLASS_NAME_STRING);
+  private static final String JAVA_9_PLUS_ANNOTATION_GENERATED_PACKAGE =
+      "javax.annotation.processing";
+  private static final ClassName JAVA_9_PLUS_ANNOTATION_GENERATED_CLASS_NAME =
+      ClassName.get(
+          JAVA_9_PLUS_ANNOTATION_GENERATED_PACKAGE, GENERATED_ANNOTATION_CLASS_NAME_STRING);
+  private static final String PRE_JAVA_9_ANNOTATION_GENERATED =
+      String.format(
+          "%s.%s", PRE_JAVA_9_ANNOTATION_GENERATED_PACKAGE, GENERATED_ANNOTATION_CLASS_NAME_STRING);
+  private static final String JAVA_9_PLUS_ANNOTATION_GENERATED =
+      String.format(
+          "%s.%s",
+          JAVA_9_PLUS_ANNOTATION_GENERATED_PACKAGE, GENERATED_ANNOTATION_CLASS_NAME_STRING);
+  private static final ClassName COMPONENT_ANNOTATION_CLASS_NAME =
+      ClassName.get("org.springframework.stereotype", "Component");
   private final Clock clock;
 
   private final AtomicReference<ProcessingEnvironment> processingEnvironment;
@@ -64,10 +83,10 @@ public class ConversionServiceAdapterGenerator {
     final FieldSpec conversionServiceFieldSpec = buildConversionServiceFieldSpec();
     final TypeSpec.Builder adapterClassTypeSpec =
         TypeSpec.classBuilder(descriptor.getAdapterClassName()).addModifiers(PUBLIC);
-    Optional.ofNullable(buildGeneratedAnnotationSpec(descriptor))
+    Optional.ofNullable(buildGeneratedAnnotationSpec())
         .ifPresent(adapterClassTypeSpec::addAnnotation);
     return adapterClassTypeSpec
-        .addAnnotation(ClassName.get("org.springframework.stereotype", "Component"))
+        .addAnnotation(COMPONENT_ANNOTATION_CLASS_NAME)
         .addField(conversionServiceFieldSpec)
         .addMethod(buildConstructorSpec(descriptor, conversionServiceFieldSpec))
         .addMethods(buildMappingMethods(descriptor, conversionServiceFieldSpec))
@@ -92,27 +111,24 @@ public class ConversionServiceAdapterGenerator {
     final ParameterSpec.Builder parameterBuilder =
         ParameterSpec.builder(
             conversionServiceFieldSpec.type, conversionServiceFieldSpec.name, FINAL);
-    if (StringUtils.isNotEmpty(descriptor.getConversionServiceBeanName())) {
+    if (isNotEmpty(descriptor.getConversionServiceBeanName())) {
       parameterBuilder.addAnnotation(buildQualifierAnnotation(descriptor));
     }
-    if (Boolean.TRUE.equals(descriptor.isLazyAnnotatedConversionServiceBean())) {
+    if (TRUE.equals(descriptor.isLazyAnnotatedConversionServiceBean())) {
       parameterBuilder.addAnnotation(buildLazyAnnotation());
     }
     return parameterBuilder.build();
   }
 
   private static AnnotationSpec buildQualifierAnnotation(
-      ConversionServiceAdapterDescriptor descriptor) {
-    return AnnotationSpec.builder(
-            ClassName.get(QUALIFIER_ANNOTATION_PACKAGE_NAME, QUALIFIER_ANNOTATION_CLASSS_NAME))
+      final ConversionServiceAdapterDescriptor descriptor) {
+    return AnnotationSpec.builder(QUALIFIER_ANNOTATION_CLASS_NAME)
         .addMember("value", "$S", descriptor.getConversionServiceBeanName())
         .build();
   }
 
   private static AnnotationSpec buildLazyAnnotation() {
-    return AnnotationSpec.builder(
-            ClassName.get(LAZY_ANNOTATION_PACKAGE_NAME, LAZY_ANNOTATION_CLASS_NAME))
-        .build();
+    return AnnotationSpec.builder(LAZY_ANNOTATION_CLASS_NAME).build();
   }
 
   private String collectionOfMethodName(final ParameterizedTypeName parameterizedTypeName) {
@@ -163,7 +179,7 @@ public class ConversionServiceAdapterGenerator {
     } else return String.valueOf(typeName);
   }
 
-  private static String arraySimpleName(ArrayTypeName arrayTypeName) {
+  private static String arraySimpleName(final ArrayTypeName arrayTypeName) {
     return "ArrayOf"
         + (arrayTypeName.componentType instanceof ArrayTypeName
             ? arraySimpleName((ArrayTypeName) arrayTypeName.componentType)
@@ -212,13 +228,15 @@ public class ConversionServiceAdapterGenerator {
       final FieldSpec injectedConversionServiceFieldSpec,
       final ParameterSpec sourceParameterSpec,
       final Pair<TypeName, TypeName> sourceTargetPair) {
-    final var arguments = new ArrayList<>();
-    arguments.add(sourceTargetPair.getRight());
-    arguments.add(injectedConversionServiceFieldSpec);
-    arguments.add(sourceParameterSpec);
-    arguments.addAll(typeDescriptorArguments(sourceTargetPair.getLeft()));
-    arguments.addAll(typeDescriptorArguments(sourceTargetPair.getRight()));
-    return arguments.toArray();
+    return concat(
+            concat(
+                Stream.of(
+                    sourceTargetPair.getRight(),
+                    injectedConversionServiceFieldSpec,
+                    sourceParameterSpec),
+                typeDescriptorArguments(sourceTargetPair.getLeft())),
+            typeDescriptorArguments(sourceTargetPair.getRight()))
+        .toArray();
   }
 
   private String typeDescriptorFormat(final TypeName typeName) {
@@ -231,20 +249,14 @@ public class ConversionServiceAdapterGenerator {
     return "$T.valueOf($T.class)";
   }
 
-  private List<Object> typeDescriptorArguments(final TypeName typeName) {
-    final List<Object> allArguments;
-    if (typeName instanceof ParameterizedTypeName
-        && isCollectionWithGenericParameter((ParameterizedTypeName) typeName)) {
-      allArguments = new ArrayList<>();
-      allArguments.add(TYPE_DESCRIPTOR_CLASS_NAME);
-      allArguments.add(((ParameterizedTypeName) typeName).rawType);
-      allArguments.addAll(
-          typeDescriptorArguments(
-              ((ParameterizedTypeName) typeName).typeArguments.iterator().next()));
-    } else {
-      allArguments = List.of(TYPE_DESCRIPTOR_CLASS_NAME, rawType(typeName));
-    }
-    return allArguments;
+  private Stream<Object> typeDescriptorArguments(final TypeName typeName) {
+    return typeName instanceof ParameterizedTypeName
+            && isCollectionWithGenericParameter((ParameterizedTypeName) typeName)
+        ? concat(
+            Stream.of(TYPE_DESCRIPTOR_CLASS_NAME, ((ParameterizedTypeName) typeName).rawType),
+            typeDescriptorArguments(
+                ((ParameterizedTypeName) typeName).typeArguments.iterator().next()))
+        : Stream.of(TYPE_DESCRIPTOR_CLASS_NAME, rawType(typeName));
   }
 
   private static ParameterSpec buildSourceParameterSpec(final TypeName sourceClassName) {
@@ -253,25 +265,12 @@ public class ConversionServiceAdapterGenerator {
 
   private static FieldSpec buildConversionServiceFieldSpec() {
     return FieldSpec.builder(
-            ClassName.get(CONVERSION_SERVICE_PACKAGE_NAME, CONVERSION_SERVICE_CLASS_NAME),
-            CONVERSION_SERVICE_FIELD_NAME,
-            PRIVATE,
-            FINAL)
+            CONVERSION_SERVICE_CLASS_NAME, CONVERSION_SERVICE_FIELD_NAME, PRIVATE, FINAL)
         .build();
   }
 
-  private AnnotationSpec buildGeneratedAnnotationSpec(
-      final ConversionServiceAdapterDescriptor descriptor) {
-    final AnnotationSpec.Builder builder;
-    if (descriptor.isSourceVersionAtLeast9()
-        && isTypeAvailable(descriptor, "javax.annotation.processing.Generated")) {
-      builder = AnnotationSpec.builder(ClassName.get("javax.annotation.processing", "Generated"));
-    } else if (isTypeAvailable(descriptor, "javax.annotation.Generated")) {
-      builder = AnnotationSpec.builder(ClassName.get("javax.annotation", "Generated"));
-    } else {
-      builder = null;
-    }
-    return Optional.ofNullable(builder)
+  private AnnotationSpec buildGeneratedAnnotationSpec() {
+    return Optional.ofNullable(baseAnnotationSpecBuilder())
         .map(
             build ->
                 build.addMember("value", "$S", ConversionServiceAdapterGenerator.class.getName()))
@@ -280,9 +279,33 @@ public class ConversionServiceAdapterGenerator {
         .orElse(null);
   }
 
-  private static boolean isTypeAvailable(
-      final ConversionServiceAdapterDescriptor descriptor, final String name) {
-    return descriptor.getElementUtils().getTypeElement(name) != null;
+  private AnnotationSpec.Builder baseAnnotationSpecBuilder() {
+    final AnnotationSpec.Builder builder;
+    if (isJava9PlusGeneratedAvailable()) {
+      builder = AnnotationSpec.builder(JAVA_9_PLUS_ANNOTATION_GENERATED_CLASS_NAME);
+    } else if (isPreJava9GeneratedAvailable()) {
+      builder = AnnotationSpec.builder(PRE_JAVA_9_ANNOTATION_GENERATED_CLASS_NAME);
+    } else {
+      builder = null;
+    }
+    return builder;
+  }
+
+  private boolean isPreJava9GeneratedAvailable() {
+    return isTypeAvailable(PRE_JAVA_9_ANNOTATION_GENERATED);
+  }
+
+  private boolean isJava9PlusGeneratedAvailable() {
+    return isSourceVersionAtLeast9()
+            && isTypeAvailable(JAVA_9_PLUS_ANNOTATION_GENERATED);
+  }
+
+  private boolean isSourceVersionAtLeast9() {
+    return processingEnvironment.get().getSourceVersion().compareTo(RELEASE_8) > 0;
+  }
+
+  private boolean isTypeAvailable(final String name) {
+    return processingEnvironment.get().getElementUtils().getTypeElement(name) != null;
   }
 
   public void init(final ProcessingEnvironment processingEnv) {

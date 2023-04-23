@@ -1,12 +1,19 @@
 package org.mapstruct.extensions.spring.converter;
 
+import static java.lang.Boolean.TRUE;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static javax.lang.model.type.TypeKind.DECLARED;
+import static javax.tools.Diagnostic.Kind.ERROR;
+
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.mapstruct.extensions.spring.SpringMapperConfig;
-
+import java.io.IOException;
+import java.io.Writer;
+import java.time.Clock;
+import java.util.*;
+import java.util.Map.Entry;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -15,19 +22,10 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import java.io.IOException;
-import java.io.Writer;
-import java.time.Clock;
-import java.util.*;
-import java.util.Map.Entry;
-
-import static java.lang.Boolean.TRUE;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
-import static javax.lang.model.SourceVersion.RELEASE_8;
-import static javax.lang.model.type.TypeKind.DECLARED;
-import static javax.tools.Diagnostic.Kind.ERROR;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 @SupportedAnnotationTypes({
   ConverterMapperProcessor.MAPPER,
@@ -76,29 +74,26 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return new ConversionServiceAdapterDescriptor()
         .adapterClassName(getAdapterClassName(annotations, roundEnv))
-        .conversionServiceBeanName(getConversionServiceName(annotations, roundEnv))
+        .conversionServiceBeanName(getConversionServiceBeanName(annotations, roundEnv))
         .lazyAnnotatedConversionServiceBean(
             getLazyAnnotatedConversionServiceBean(annotations, roundEnv))
-        .fromToMappings(getExternalConversionMappings(annotations, roundEnv))
-        .elementUtils(processingEnv.getElementUtils())
-        .sourceVersionAtLeast9(processingEnv.getSourceVersion().compareTo(RELEASE_8) > 0);
+        .fromToMappings(getExternalConversionMappings(annotations, roundEnv));
   }
 
   private List<Pair<TypeName, TypeName>> getExternalConversionMappings(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    final Optional<List<Pair<TypeName, TypeName>>> pairs =
-        annotations.stream()
-            .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
-            .findFirst()
-            .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
-            .flatMap(this::toSpringMapperConfigMirror)
-            .map(AnnotationMirror::getElementValues)
-            .flatMap(this::extractExternalConversions)
-            .map(Entry::getValue)
-            .map(AnnotationValue::getValue)
-            .map(List.class::cast)
-            .map(this::toSourceTargetTypeNamePairs);
-    return pairs.orElse(emptyList());
+    return annotations.stream()
+        .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
+        .findFirst()
+        .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
+        .flatMap(this::toSpringMapperConfigMirror)
+        .map(AnnotationMirror::getElementValues)
+        .flatMap(this::extractExternalConversions)
+        .map(Entry::getValue)
+        .map(AnnotationValue::getValue)
+        .map(List.class::cast)
+        .map(this::toSourceTargetTypeNamePairs)
+        .orElse(emptyList());
   }
 
   private List<Pair<TypeName, TypeName>> toSourceTargetTypeNamePairs(
@@ -262,13 +257,13 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return String.valueOf(processingEnv.getElementUtils().getPackageOf(element).getQualifiedName());
   }
 
-  private String getConversionServiceName(
+  private static String getConversionServiceBeanName(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return annotations.stream()
         .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
         .findFirst()
         .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
-        .map(this::toSpringMapperConfig)
+        .map(ConverterMapperProcessor::toSpringMapperConfig)
         .map(SpringMapperConfig::conversionServiceBeanName)
         .orElse(null);
   }
@@ -278,7 +273,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return roundEnv.getElementsAnnotatedWith(annotation).stream().findFirst();
   }
 
-  private SpringMapperConfig toSpringMapperConfig(final Element element) {
+  private static SpringMapperConfig toSpringMapperConfig(final Element element) {
     return element.getAnnotation(SpringMapperConfig.class);
   }
 
@@ -296,13 +291,13 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .equals(annotationMirror.getAnnotationType().asElement().asType());
   }
 
-  private boolean getLazyAnnotatedConversionServiceBean(
+  private static boolean getLazyAnnotatedConversionServiceBean(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return annotations.stream()
         .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
         .findFirst()
         .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
-        .map(this::toSpringMapperConfig)
+        .map(ConverterMapperProcessor::toSpringMapperConfig)
         .map(SpringMapperConfig::lazyAnnotatedConversionServiceBean)
         .orElse(TRUE);
   }
