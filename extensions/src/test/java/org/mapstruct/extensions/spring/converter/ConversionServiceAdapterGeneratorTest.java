@@ -1,6 +1,8 @@
 package org.mapstruct.extensions.spring.converter;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static javax.lang.model.SourceVersion.RELEASE_8;
+import static javax.lang.model.SourceVersion.RELEASE_9;
 import static org.apache.commons.io.IOUtils.resourceToString;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.assertj.core.api.BDDAssertions.thenIllegalStateException;
@@ -16,6 +18,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 
 @ExtendWith(MockitoExtension.class)
 class ConversionServiceAdapterGeneratorTest {
@@ -42,6 +46,22 @@ class ConversionServiceAdapterGeneratorTest {
 
   @Nested
   class DefaultProcessingEnvironment {
+    @BeforeEach
+    void initWithProcessingEnvironment() {
+      final var processingEnvironment = mock(ProcessingEnvironment.class);
+      given(processingEnvironment.getElementUtils()).willReturn(elements);
+      given(processingEnvironment.getSourceVersion())
+          .will((Answer<SourceVersion>)
+              (invocation) -> {
+                if (isAtLeastJava9) {
+                  return RELEASE_9;
+                } else {
+                  return RELEASE_8;
+                }
+              });
+      underTest.init(processingEnvironment);
+    }
+    
     @Nested
     class Java8Generated {
       @BeforeEach
@@ -126,9 +146,7 @@ class ConversionServiceAdapterGeneratorTest {
                             ClassName.get(List.class), ClassName.get("test", "Car")),
                         ParameterizedTypeName.get(
                             ClassName.get(List.class), ClassName.get("test", "CarDto")))))
-            .lazyAnnotatedConversionServiceBean(true)
-            .elementUtils(elements)
-            .sourceVersionAtLeast9(isAtLeastJava9);
+            .lazyAnnotatedConversionServiceBean(true);
     final StringWriter outputWriter = new StringWriter();
 
     // When
@@ -157,9 +175,7 @@ class ConversionServiceAdapterGeneratorTest {
                             ClassName.get(List.class), ClassName.get("test", "Car")),
                         ParameterizedTypeName.get(
                             ClassName.get(List.class), ClassName.get("test", "CarDto")))))
-            .lazyAnnotatedConversionServiceBean(true)
-            .elementUtils(elements)
-            .sourceVersionAtLeast9(isAtLeastJava9);
+            .lazyAnnotatedConversionServiceBean(true);
     final StringWriter outputWriter = new StringWriter();
 
     // When
