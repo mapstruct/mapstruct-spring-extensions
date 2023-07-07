@@ -1,6 +1,8 @@
 package org.mapstruct.extensions.spring.converter;
 
+import static java.lang.Boolean.TRUE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.function.UnaryOperator.identity;
 import static javax.lang.model.SourceVersion.RELEASE_8;
 import static javax.lang.model.SourceVersion.RELEASE_9;
 import static org.apache.commons.io.IOUtils.resourceToString;
@@ -17,6 +19,8 @@ import java.time.Clock;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.UnaryOperator;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
@@ -46,22 +50,24 @@ class ConversionServiceAdapterGeneratorTest {
 
   @Nested
   class DefaultProcessingEnvironment {
+    @Mock private ProcessingEnvironment processingEnvironment;
+
     @BeforeEach
     void initWithProcessingEnvironment() {
-      final var processingEnvironment = mock(ProcessingEnvironment.class);
       given(processingEnvironment.getElementUtils()).willReturn(elements);
       given(processingEnvironment.getSourceVersion())
-          .will((Answer<SourceVersion>)
-              (invocation) -> {
-                if (isAtLeastJava9) {
-                  return RELEASE_9;
-                } else {
-                  return RELEASE_8;
-                }
-              });
+          .will(
+              (Answer<SourceVersion>)
+                  (invocation) -> {
+                    if (isAtLeastJava9) {
+                      return RELEASE_9;
+                    } else {
+                      return RELEASE_8;
+                    }
+                  });
       underTest.init(processingEnvironment);
     }
-    
+
     @Nested
     class Java8Generated {
       @BeforeEach
@@ -82,6 +88,15 @@ class ConversionServiceAdapterGeneratorTest {
         ConversionServiceAdapterGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
                 "ConversionServiceAdapterCustomBeanJava8Generated.java");
+      }
+
+      @Test
+      void shouldSuppressDateGenerationWhenProcessingEnvironmentHasSuppressionSetToTrue()
+              throws IOException {
+        given(processingEnvironment.getOptions())
+                .willReturn(Map.of("mapstruct.suppressGeneratorTimestamp", String.valueOf(TRUE)));
+        ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
+                "ConversionServiceAdapterJava8GeneratedNoDate.java");
       }
     }
 
@@ -105,6 +120,15 @@ class ConversionServiceAdapterGeneratorTest {
         ConversionServiceAdapterGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
                 "ConversionServiceAdapterCustomBeanJava9PlusGenerated.java");
+      }
+
+      @Test
+      void shouldSuppressDateGenerationWhenProcessingEnvironmentHasSuppressionSetToTrue()
+          throws IOException {
+        given(processingEnvironment.getOptions())
+            .willReturn(Map.of("mapstruct.suppressGeneratorTimestamp", String.valueOf(TRUE)));
+        ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
+            "ConversionServiceAdapterJava9PlusGeneratedNoDate.java");
       }
     }
 
@@ -130,23 +154,26 @@ class ConversionServiceAdapterGeneratorTest {
     }
   }
 
-  void shouldGenerateMatchingOutput(final String expectedContentFileName) throws IOException {
-    // Given
+  void shouldGenerateMatchingOutput(
+      final String expectedContentFileName,
+      final UnaryOperator<ConversionServiceAdapterDescriptor> descriptorDecorator)
+      throws IOException {
     final ConversionServiceAdapterDescriptor descriptor =
-        new ConversionServiceAdapterDescriptor()
-            .adapterClassName(
-                ClassName.get(
-                    ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
-                    "ConversionServiceAdapter"))
-            .fromToMappings(
-                List.of(
-                    Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto")),
-                    Pair.of(
-                        ParameterizedTypeName.get(
-                            ClassName.get(List.class), ClassName.get("test", "Car")),
-                        ParameterizedTypeName.get(
-                            ClassName.get(List.class), ClassName.get("test", "CarDto")))))
-            .lazyAnnotatedConversionServiceBean(true);
+        descriptorDecorator.apply(
+            new ConversionServiceAdapterDescriptor()
+                .adapterClassName(
+                    ClassName.get(
+                        ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
+                        "ConversionServiceAdapter"))
+                .fromToMappings(
+                    List.of(
+                        Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto")),
+                        Pair.of(
+                            ParameterizedTypeName.get(
+                                ClassName.get(List.class), ClassName.get("test", "Car")),
+                            ParameterizedTypeName.get(
+                                ClassName.get(List.class), ClassName.get("test", "CarDto")))))
+                .lazyAnnotatedConversionServiceBean(true));
     final StringWriter outputWriter = new StringWriter();
 
     // When
@@ -157,33 +184,15 @@ class ConversionServiceAdapterGeneratorTest {
         .isEqualToIgnoringWhitespace(resourceToString('/' + expectedContentFileName, UTF_8));
   }
 
+  void shouldGenerateMatchingOutput(final String expectedContentFileName) throws IOException {
+    shouldGenerateMatchingOutput(expectedContentFileName, identity());
+  }
+
   void shouldGenerateMatchingOutputWhenUsingCustomConversionService(
       final String expectedContentFileName) throws IOException {
-    // Given
-    final ConversionServiceAdapterDescriptor descriptor =
-        new ConversionServiceAdapterDescriptor()
-            .adapterClassName(
-                ClassName.get(
-                    ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
-                    "ConversionServiceAdapter"))
-            .conversionServiceBeanName("myConversionService")
-            .fromToMappings(
-                List.of(
-                    Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto")),
-                    Pair.of(
-                        ParameterizedTypeName.get(
-                            ClassName.get(List.class), ClassName.get("test", "Car")),
-                        ParameterizedTypeName.get(
-                            ClassName.get(List.class), ClassName.get("test", "CarDto")))))
-            .lazyAnnotatedConversionServiceBean(true);
-    final StringWriter outputWriter = new StringWriter();
-
-    // When
-    underTest.writeConversionServiceAdapter(descriptor, outputWriter);
-
-    // Then
-    then(outputWriter.toString())
-        .isEqualToIgnoringWhitespace(resourceToString('/' + expectedContentFileName, UTF_8));
+    shouldGenerateMatchingOutput(
+        expectedContentFileName,
+        descriptor -> descriptor.conversionServiceBeanName("myConversionService"));
   }
 
   @Nested

@@ -63,9 +63,12 @@ subprojects {
         }
     }
 
-    test {
-        // Use junit platform for unit tests
-        useJUnitPlatform()
+    testing {
+        suites {
+            test {
+                useJUnitJupiter()
+            }
+        }
     }
 
     jacoco {

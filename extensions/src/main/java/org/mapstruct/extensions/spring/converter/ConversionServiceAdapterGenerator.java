@@ -1,6 +1,7 @@
 package org.mapstruct.extensions.spring.converter;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.Boolean.parseBoolean;
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
@@ -60,11 +61,10 @@ public class ConversionServiceAdapterGenerator {
     processingEnvironment = new AtomicReference<>();
   }
 
-  
   ProcessingEnvironment getProcessingEnvironment() {
     return processingEnvironment.get();
   }
-  
+
   public void writeConversionServiceAdapter(
       final ConversionServiceAdapterDescriptor descriptor, final Writer out) {
     try {
@@ -141,10 +141,11 @@ public class ConversionServiceAdapterGenerator {
     return simpleName(parameterizedTypeName);
   }
 
-  private boolean isCollectionWithGenericParameter(final ParameterizedTypeName parameterizedTypeName) {
+  private boolean isCollectionWithGenericParameter(
+      final ParameterizedTypeName parameterizedTypeName) {
     return parameterizedTypeName.typeArguments != null
-            && parameterizedTypeName.typeArguments.size() > 0
-            && isCollection(parameterizedTypeName);
+        && parameterizedTypeName.typeArguments.size() > 0
+        && isCollection(parameterizedTypeName);
   }
 
   private boolean isCollection(final ParameterizedTypeName parameterizedTypeName) {
@@ -194,8 +195,8 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private Iterable<MethodSpec> buildMappingMethods(
-          final ConversionServiceAdapterDescriptor descriptor,
-          final FieldSpec injectedConversionServiceFieldSpec) {
+      final ConversionServiceAdapterDescriptor descriptor,
+      final FieldSpec injectedConversionServiceFieldSpec) {
     return descriptor.getFromToMappings().stream()
         .map(
             sourceTargetPair ->
@@ -204,8 +205,8 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private MethodSpec toMappingMethodSpec(
-          final FieldSpec injectedConversionServiceFieldSpec,
-          final Pair<TypeName, TypeName> sourceTargetPair) {
+      final FieldSpec injectedConversionServiceFieldSpec,
+      final Pair<TypeName, TypeName> sourceTargetPair) {
     final ParameterSpec sourceParameterSpec = buildSourceParameterSpec(sourceTargetPair.getLeft());
     return MethodSpec.methodBuilder(
             String.format(
@@ -220,7 +221,8 @@ public class ConversionServiceAdapterGenerator {
                 "return ($T) $N.convert($N, %s, %s)",
                 typeDescriptorFormat(sourceTargetPair.getLeft()),
                 typeDescriptorFormat(sourceTargetPair.getRight())),
-                allTypeDescriptorArguments(injectedConversionServiceFieldSpec, sourceParameterSpec, sourceTargetPair))
+            allTypeDescriptorArguments(
+                injectedConversionServiceFieldSpec, sourceParameterSpec, sourceTargetPair))
         .build();
   }
 
@@ -241,10 +243,10 @@ public class ConversionServiceAdapterGenerator {
 
   private String typeDescriptorFormat(final TypeName typeName) {
     if (typeName instanceof ParameterizedTypeName
-            && isCollectionWithGenericParameter((ParameterizedTypeName) typeName)) {
+        && isCollectionWithGenericParameter((ParameterizedTypeName) typeName)) {
       return String.format(
-              "$T.collection($T.class, %s)",
-              typeDescriptorFormat(((ParameterizedTypeName) typeName).typeArguments.iterator().next()));
+          "$T.collection($T.class, %s)",
+          typeDescriptorFormat(((ParameterizedTypeName) typeName).typeArguments.iterator().next()));
     }
     return "$T.valueOf($T.class)";
   }
@@ -274,9 +276,18 @@ public class ConversionServiceAdapterGenerator {
         .map(
             build ->
                 build.addMember("value", "$S", ConversionServiceAdapterGenerator.class.getName()))
-        .map(build -> build.addMember("date", "$S", ISO_INSTANT.format(ZonedDateTime.now(clock))))
+        .map(this::addDateIfNotSuppressed)
         .map(AnnotationSpec.Builder::build)
         .orElse(null);
+  }
+
+  private AnnotationSpec.Builder addDateIfNotSuppressed(
+      final AnnotationSpec.Builder generatedAnnotationSpecBuilder) {
+    return parseBoolean(
+            processingEnvironment.get().getOptions().get("mapstruct.suppressGeneratorTimestamp"))
+        ? generatedAnnotationSpecBuilder
+        : generatedAnnotationSpecBuilder.addMember(
+            "date", "$S", ISO_INSTANT.format(ZonedDateTime.now(clock)));
   }
 
   private AnnotationSpec.Builder baseAnnotationSpecBuilder() {
@@ -296,8 +307,7 @@ public class ConversionServiceAdapterGenerator {
   }
 
   private boolean isJava9PlusGeneratedAvailable() {
-    return isSourceVersionAtLeast9()
-            && isTypeAvailable(JAVA_9_PLUS_ANNOTATION_GENERATED);
+    return isSourceVersionAtLeast9() && isTypeAvailable(JAVA_9_PLUS_ANNOTATION_GENERATED);
   }
 
   private boolean isSourceVersionAtLeast9() {
