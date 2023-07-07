@@ -52,6 +52,7 @@ public class ConversionServiceAdapterGenerator {
           JAVA_9_PLUS_ANNOTATION_GENERATED_PACKAGE, GENERATED_ANNOTATION_CLASS_NAME_STRING);
   private static final ClassName COMPONENT_ANNOTATION_CLASS_NAME =
       ClassName.get("org.springframework.stereotype", "Component");
+  private static final String SUPPRESS_GENERATOR_TIMESTAMP = "mapstruct.suppressGeneratorTimestamp";
   private final Clock clock;
 
   private final AtomicReference<ProcessingEnvironment> processingEnvironment;
@@ -283,8 +284,7 @@ public class ConversionServiceAdapterGenerator {
 
   private AnnotationSpec.Builder addDateIfNotSuppressed(
       final AnnotationSpec.Builder generatedAnnotationSpecBuilder) {
-    return parseBoolean(
-            processingEnvironment.get().getOptions().get("mapstruct.suppressGeneratorTimestamp"))
+    return parseBoolean(processingEnvironment.get().getOptions().get(SUPPRESS_GENERATOR_TIMESTAMP))
         ? generatedAnnotationSpecBuilder
         : generatedAnnotationSpecBuilder.addMember(
             "date", "$S", ISO_INSTANT.format(ZonedDateTime.now(clock)));
