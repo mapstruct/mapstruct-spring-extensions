@@ -16,8 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
 
 @SpringBootTest(classes = ConversionServiceAdapter.class)
-@MapStructConverterScan(basePackageClasses = MapperSpringConfig.class)
-class ComponentScanTest {
+@ConverterScan(basePackageClasses = MapperSpringConfig.class)
+class ConverterScanTest {
   private static final int TEST_WHEEL_DIAMETER = 18;
   @Autowired private ConversionService conversionService;
 

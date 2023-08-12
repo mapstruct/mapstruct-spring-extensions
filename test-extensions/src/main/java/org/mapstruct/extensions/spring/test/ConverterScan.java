@@ -15,11 +15,11 @@ import org.springframework.core.annotation.AliasFor;
 
 @ComponentScan
 @Target(TYPE)
-@Import(MapStructTestConfiguration.class)
+@Import(ConversionServiceTestConfiguration.class)
 @Documented
 @Retention(RUNTIME)
-@Repeatable(MapStructConverterScans.class)
-public @interface MapStructConverterScan {
+@Repeatable(ConverterScans.class)
+public @interface ConverterScan {
     @AliasFor(annotation = ComponentScan.class, attribute = "value")
     String[] value() default {};
 

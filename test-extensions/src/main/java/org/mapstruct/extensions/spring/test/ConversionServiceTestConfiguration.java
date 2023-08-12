@@ -8,7 +8,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.DefaultConversionService;
 
 @Configuration
-class MapStructTestConfiguration {
+class ConversionServiceTestConfiguration {
     @Bean
     ConversionService basicConversionService(final List<Converter<?,?>> converters) {
         var conversionService = new DefaultConversionService();
