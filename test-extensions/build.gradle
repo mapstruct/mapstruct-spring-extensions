@@ -6,6 +6,9 @@ dependencies {
     implementation libs.spring.context
 
     testImplementation libs.bundles.junit.jupiter
+    testImplementation projects.examples.model
+    testImplementation projects.examples.noconfig
+    testImplementation libs.spring.boot.starter.test
 }
 
 publishing {

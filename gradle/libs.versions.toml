@@ -11,7 +11,7 @@ jupiter = "5.10.0"
 mapstruct = "1.4.0.Final"
 mockito = "5.4.0"
 spring = "5.0.0.RELEASE"
-springBoot = "2.7.7"
+springBoot = "2.7.14"
 springDependencyManagement = "1.1.2"
 versionsPlugin = "0.47.0"
 
@@ -29,7 +29,7 @@ mapstruct-core = { group = "org.mapstruct", name = "mapstruct", version.ref = "m
 mapstruct-processor = { group = "org.mapstruct", name = "mapstruct-processor", version.ref = "mapstruct" }
 mockito = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
 spring-boot-starter-core = { group = "org.springframework.boot", name = "spring-boot-starter" }
-spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test", version.ref = "springBoot" }
 spring-context = { group = "org.springframework", name = "spring-context", version.ref = "spring" }
 spring-core = { group = "org.springframework", name = "spring-core", version.ref = "spring" }
 spring-test = { group = "org.springframework", name = "spring-test", version.ref = "spring" }
