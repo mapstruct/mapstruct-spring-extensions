@@ -2,23 +2,16 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
-    implementation projects.annotations
-    implementation libs.javapoet
-    implementation libs.commons.lang3
+    implementation libs.spring.core
+    implementation libs.spring.context
 
-    testImplementation libs.assertj
     testImplementation libs.bundles.junit.jupiter
-    testImplementation libs.commons.io
-    testImplementation libs.guava
-    testImplementation libs.mapstruct.core
-    testImplementation libs.mockito
-    testImplementation libs.spring.core
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = 'mapstruct-spring-extensions'
+            artifactId = 'mapstruct-spring-test-extensions'
             from components.java
             versionMapping {
                 usage('java-api') {
@@ -29,8 +22,8 @@ publishing {
                 }
             }
             pom {
-                name = 'MapStruct Spring Extensions'
-                description = 'Spring-specific MapStruct extensions'
+                name = 'MapStruct Spring Test Extensions'
+                description = 'Spring-specific MapStruct extensions for testing purposes'
                 url = 'https://mapstruct.org/'
                 packaging = 'jar'
 
@@ -65,9 +58,4 @@ publishing {
             }
         }
     }
-}
-
-signing {
-    useGpgCmd()
-    sign publishing.publications.mavenJava
 }
