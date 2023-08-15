@@ -1,19 +1,25 @@
 package org.mapstruct.extensions.spring.test;
 
 import java.util.List;
-import org.springframework.context.annotation.Bean;
+import javax.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.convert.support.ConfigurableConversionService;
 
 @Configuration
 class ConversionServiceTestConfiguration {
-    @Bean
-    ConversionService basicConversionService(final List<Converter<?,?>> converters) {
-        var conversionService = new DefaultConversionService();
-        converters.forEach(conversionService::addConverter);
+  private final ConfigurableConversionService conversionService;
+  private final List<Converter<?, ?>> converters;
 
-        return conversionService;
-    }
+  ConversionServiceTestConfiguration(
+      final ConfigurableConversionService conversionService,
+      final List<Converter<?, ?>> converters) {
+    this.conversionService = conversionService;
+    this.converters = converters;
+  }
+
+  @PostConstruct
+  void registerConverters() {
+    converters.forEach(conversionService::addConverter);
+  }
 }
