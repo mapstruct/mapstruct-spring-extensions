@@ -4,6 +4,9 @@ apply plugin: "signing"
 dependencies {
     implementation libs.spring.context
     implementation libs.jakarta.annotation
+
+    testImplementation libs.bundles.junit.jupiter
+    testImplementation libs.mockito
 }
 
 publishing {
