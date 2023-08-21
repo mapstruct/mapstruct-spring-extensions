@@ -1,5 +1,12 @@
 package org.mapstruct.extensions.spring.example;
 
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mapstruct.extensions.spring.example.CarType.OTHER;
+import static org.mapstruct.extensions.spring.example.SeatMaterial.LEATHER;
+import static org.mapstruct.extensions.spring.example.WheelPosition.RIGHT_FRONT;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,14 +21,6 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mapstruct.extensions.spring.example.CarType.OTHER;
-import static org.mapstruct.extensions.spring.example.SeatMaterial.LEATHER;
-import static org.mapstruct.extensions.spring.example.WheelPosition.RIGHT_FRONT;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
@@ -44,7 +43,7 @@ public class ConversionServiceAdapterIntegrationTest {
   @Qualifier("myConversionService")
   private ConfigurableConversionService conversionService;
 
-  @ComponentScan("org.mapstruct.extensions.spring")
+  @ComponentScan("org.mapstruct.extensions.spring.example.custombean")
   @Component
   static class AdditionalBeanConfiguration {
     @Bean

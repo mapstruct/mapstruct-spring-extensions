@@ -8,6 +8,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import org.mapstruct.extensions.spring.runtime.ConverterRegistrationConfiguration;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.context.annotation.*;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -15,7 +16,7 @@ import org.springframework.core.annotation.AliasFor;
 
 @ComponentScan
 @Target(TYPE)
-@Import({ConversionServiceTestConfiguration.class, ConversionServiceProvider.class})
+@Import({ConverterRegistrationConfiguration.class, ConversionServiceProvider.class})
 @Documented
 @Retention(RUNTIME)
 @Repeatable(ConverterScans.class)
