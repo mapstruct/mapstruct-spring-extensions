@@ -1,5 +1,7 @@
 package org.mapstruct.extensions.spring.converter;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import java.util.List;
@@ -10,6 +12,10 @@ public class ConversionServiceAdapterDescriptor {
   private String conversionServiceBeanName;
   private List<Pair<TypeName, TypeName>> fromToMappings;
   private boolean lazyAnnotatedConversionServiceBean;
+
+  boolean hasNonDefaultConversionServiceBeanName() {
+    return isNotEmpty(getConversionServiceBeanName());
+  }
 
   public ClassName getAdapterClassName() {
     return adapterClassName;

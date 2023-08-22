@@ -4,6 +4,7 @@ assertj = "3.24.2"
 commons-io = "2.13.0"
 commons-lang3 = "3.13.0"
 dependencyCheck = "8.3.1"
+dummymaker = "4.0.0"
 guava = "32.1.2-jre"
 jakarta-annotation-api = "1.3.5"
 javapoet = "1.13.0"
@@ -20,6 +21,7 @@ versionsPlugin = "0.47.0"
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
 commons-io = { group = "commons-io", name = "commons-io", version.ref = "commons-io" }
 commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "commons-lang3" }
+dummymaker = { group = "com.github.goodforgod", name = "dummymaker", version.ref = "dummymaker"}
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakarta-annotation-api" }
 javapoet = { group = "com.squareup", name = "javapoet", version.ref = "javapoet"}

@@ -8,7 +8,6 @@ import static java.util.stream.Stream.concat;
 import static javax.lang.model.SourceVersion.RELEASE_8;
 import static javax.lang.model.element.Modifier.*;
 import static javax.tools.Diagnostic.Kind.WARNING;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import com.squareup.javapoet.*;
 import java.io.IOException;
@@ -112,7 +111,7 @@ public class ConversionServiceAdapterGenerator {
     final ParameterSpec.Builder parameterBuilder =
         ParameterSpec.builder(
             conversionServiceFieldSpec.type, conversionServiceFieldSpec.name, FINAL);
-    if (isNotEmpty(descriptor.getConversionServiceBeanName())) {
+    if (descriptor.hasNonDefaultConversionServiceBeanName()) {
       parameterBuilder.addAnnotation(buildQualifierAnnotation(descriptor));
     }
     if (TRUE.equals(descriptor.isLazyAnnotatedConversionServiceBean())) {
