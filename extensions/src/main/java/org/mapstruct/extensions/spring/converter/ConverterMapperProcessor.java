@@ -14,6 +14,9 @@ import java.io.Writer;
 import java.time.Clock;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -175,8 +178,10 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return mapper.asType().getKind() == DECLARED;
   }
 
-  private static Pair<TypeName, TypeName> toFromToMapping(final List<? extends TypeMirror> sourceTypeTargetType) {
-    return Pair.of(TypeName.get(sourceTypeTargetType.get(0)), TypeName.get(sourceTypeTargetType.get(1)));
+  private static Pair<TypeName, TypeName> toFromToMapping(
+      final List<? extends TypeMirror> sourceTypeTargetType) {
+    return Pair.of(
+        TypeName.get(sourceTypeTargetType.get(0)), TypeName.get(sourceTypeTargetType.get(1)));
   }
 
   private List<? extends TypeMirror> toTypeArguments(final Element mapper) {
@@ -188,8 +193,24 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   }
 
   private void writeAdapterClassFile(final ConversionServiceAdapterDescriptor descriptor) {
-    try (final Writer outputWriter = openAdapterFile(descriptor)) {
-      adapterGenerator.writeConversionServiceAdapter(descriptor, outputWriter);
+    writeOutputFile(
+        descriptor,
+        this::openAdapterFile,
+        adapterGenerator::writeConversionServiceAdapter,
+        () -> descriptor.getAdapterClassName().simpleName());
+  }
+
+  private interface OpenFileFunction {
+    Writer open(ConversionServiceAdapterDescriptor descriptor) throws IOException;
+  }
+
+  private void writeOutputFile(
+      final ConversionServiceAdapterDescriptor descriptor,
+      final OpenFileFunction openFileFunction,
+      final BiConsumer<ConversionServiceAdapterDescriptor, Writer> generatorCall,
+      final Supplier<String> outputFilenameSupplier) {
+    try (final Writer outputWriter = openFileFunction.open(descriptor)) {
+      generatorCall.accept(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv
           .getMessager()
@@ -197,15 +218,22 @@ public class ConverterMapperProcessor extends AbstractProcessor {
               ERROR,
               String.format(
                   "Error while opening %s output file: %s",
-                  descriptor.getAdapterClassName().simpleName(), e.getMessage()));
+                  outputFilenameSupplier.get(), e.getMessage()));
     }
   }
 
   private Writer openAdapterFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
+    return openFile(descriptor, desc -> desc.getAdapterClassName().canonicalName());
+  }
+
+  private Writer openFile(
+      final ConversionServiceAdapterDescriptor descriptor,
+      final Function<ConversionServiceAdapterDescriptor, String> fileNameFunction)
+      throws IOException {
     return processingEnv
         .getFiler()
-        .createSourceFile(descriptor.getAdapterClassName().canonicalName())
+        .createSourceFile(fileNameFunction.apply(descriptor))
         .openWriter();
   }
 
