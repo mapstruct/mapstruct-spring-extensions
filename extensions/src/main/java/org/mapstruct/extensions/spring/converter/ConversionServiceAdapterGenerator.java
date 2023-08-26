@@ -97,7 +97,7 @@ public class ConversionServiceAdapterGenerator extends Generator {
   private boolean isCollectionWithGenericParameter(
       final ParameterizedTypeName parameterizedTypeName) {
     return parameterizedTypeName.typeArguments != null
-        && parameterizedTypeName.typeArguments.size() > 0
+        && !parameterizedTypeName.typeArguments.isEmpty()
         && isCollection(parameterizedTypeName);
   }
 
