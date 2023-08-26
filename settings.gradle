@@ -2,7 +2,6 @@ rootProject.name = 'mapstruct-spring-extensions-aggregator'
 
 include "annotations"
 include "extensions"
-include "runtime-extensions"
 include "test-extensions"
 include "examples"
 include "examples:model"

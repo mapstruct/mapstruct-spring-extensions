@@ -55,4 +55,16 @@ public class ConversionServiceAdapterDescriptor {
     this.lazyAnnotatedConversionServiceBean = lazyAnnotatedConversionServiceBean;
     return this;
   }
+
+  public ClassName getConverterScanClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterScan");
+  }
+
+  public ClassName getConverterScansClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterScans");
+  }
+
+  public ClassName getConverterRegistrationConfigurationClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterRegistrationConfiguration");
+  }
 }

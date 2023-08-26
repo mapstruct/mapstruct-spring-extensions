@@ -2,11 +2,11 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
-    implementation projects.runtimeExtensions
     implementation libs.spring.core
     implementation libs.spring.context
     implementation libs.jakarta.annotation
 
+    testImplementation libs.mockito
     testImplementation libs.bundles.junit.jupiter
     testImplementation projects.examples.model
     testImplementation projects.examples.noconfig

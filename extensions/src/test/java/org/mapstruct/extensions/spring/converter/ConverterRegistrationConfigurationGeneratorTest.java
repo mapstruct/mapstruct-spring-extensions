@@ -21,13 +21,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 @ExtendWith(MockitoExtension.class)
-class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
+class ConverterRegistrationConfigurationGeneratorTest extends GeneratorTest {
   @Mock private Elements elements;
 
   private boolean isAtLeastJava9;
 
-  private final ConversionServiceAdapterGenerator underTest =
-      new ConversionServiceAdapterGenerator(FIXED_CLOCK);
+  private final ConverterRegistrationConfigurationGenerator underTest =
+      new ConverterRegistrationConfigurationGenerator(FIXED_CLOCK);
 
   @Nested
   class DefaultProcessingEnvironment {
@@ -60,16 +60,9 @@ class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
 
       @Test
       void shouldGenerateMatchingOutput() throws IOException {
-        ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterJava8Generated.java",
-            underTest::writeGeneratedCodeToOutput);
-      }
-
-      @Test
-      void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
-        ConversionServiceAdapterGeneratorTest.this
+        ConverterRegistrationConfigurationGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
-                "ConversionServiceAdapterCustomBeanJava8Generated.java",
+                "ConverterRegistrationConfigurationJava8Generated.java",
                 underTest::writeGeneratedCodeToOutput);
       }
 
@@ -78,9 +71,10 @@ class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
           throws IOException {
         given(processingEnvironment.getOptions())
             .willReturn(Map.of("mapstruct.suppressGeneratorTimestamp", String.valueOf(TRUE)));
-        ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterJava8GeneratedNoDate.java",
-            underTest::writeGeneratedCodeToOutput);
+        ConverterRegistrationConfigurationGeneratorTest.this
+            .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
+                "ConverterRegistrationConfigurationJava8GeneratedNoDate.java",
+                underTest::writeGeneratedCodeToOutput);
       }
     }
 
@@ -95,16 +89,9 @@ class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
 
       @Test
       void shouldGenerateMatchingOutput() throws IOException {
-        ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterJava9PlusGenerated.java",
-            underTest::writeGeneratedCodeToOutput);
-      }
-
-      @Test
-      void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
-        ConversionServiceAdapterGeneratorTest.this
+        ConverterRegistrationConfigurationGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
-                "ConversionServiceAdapterCustomBeanJava9PlusGenerated.java",
+                "ConverterRegistrationConfigurationJava9PlusGenerated.java",
                 underTest::writeGeneratedCodeToOutput);
       }
 
@@ -113,9 +100,10 @@ class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
           throws IOException {
         given(processingEnvironment.getOptions())
             .willReturn(Map.of("mapstruct.suppressGeneratorTimestamp", String.valueOf(TRUE)));
-        ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterJava9PlusGeneratedNoDate.java",
-            underTest::writeGeneratedCodeToOutput);
+        ConverterRegistrationConfigurationGeneratorTest.this
+            .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
+                "ConverterRegistrationConfigurationJava9PlusGeneratedNoDate.java",
+                underTest::writeGeneratedCodeToOutput);
       }
     }
 
@@ -128,15 +116,9 @@ class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
 
       @Test
       void shouldGenerateMatchingOutput() throws IOException {
-        ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterNoGenerated.java", underTest::writeGeneratedCodeToOutput);
-      }
-
-      @Test
-      void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
-        ConversionServiceAdapterGeneratorTest.this
+        ConverterRegistrationConfigurationGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
-                "ConversionServiceAdapterCustomBeanNoGenerated.java",
+                "ConverterRegistrationConfigurationNoGenerated.java",
                 underTest::writeGeneratedCodeToOutput);
       }
     }
@@ -146,13 +128,13 @@ class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
   class Init {
     @Test
     void shouldInitWithProcessingEnvironment() {
-      ConversionServiceAdapterGeneratorTest.this.shouldInitWithProcessingEnvironment(
+      ConverterRegistrationConfigurationGeneratorTest.this.shouldInitWithProcessingEnvironment(
           underTest::init, underTest::getProcessingEnvironment);
     }
 
     @Test
     void shouldThrowIllegalStateExceptionWhenCalledRepeatedly() {
-      ConversionServiceAdapterGeneratorTest.this
+      ConverterRegistrationConfigurationGeneratorTest.this
           .shouldThrowIllegalStateExceptionWhenCalledRepeatedly(underTest::init);
     }
   }

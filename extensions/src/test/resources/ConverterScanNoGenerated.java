@@ -1,4 +1,4 @@
-package org.mapstruct.extensions.spring.test;
+package org.mapstruct.extensions.spring.converter;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -9,8 +9,11 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import org.springframework.beans.factory.support.BeanNameGenerator;
-import org.springframework.context.annotation.*;
-import org.springframework.context.annotation.ComponentScan.Filter;
+import org.springframework.context.annotation.AnnotationScopeMetadataResolver;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ScopeMetadataResolver;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.annotation.AliasFor;
 
 @ComponentScan
@@ -43,10 +46,10 @@ public @interface ConverterScan {
   boolean useDefaultFilters() default true;
 
   @AliasFor(annotation = ComponentScan.class, attribute = "includeFilters")
-  Filter[] includeFilters() default {};
+  ComponentScan.Filter[] includeFilters() default {};
 
   @AliasFor(annotation = ComponentScan.class, attribute = "excludeFilters")
-  Filter[] excludeFilters() default {};
+  ComponentScan.Filter[] excludeFilters() default {};
 
   @AliasFor(annotation = ComponentScan.class, attribute = "lazyInit")
   boolean lazyInit() default false;

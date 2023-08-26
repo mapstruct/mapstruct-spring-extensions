@@ -7,7 +7,6 @@ import static org.mapstruct.extensions.spring.example.WheelPosition.RIGHT_FRONT;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.extensions.spring.example.custombean.*;
@@ -33,18 +32,12 @@ public class ConversionServiceAdapterIntegrationTest {
   private static final int TEST_DIAMETER = 20;
   private static final WheelPosition TEST_WHEEL_POSITION = RIGHT_FRONT;
 
-  @Autowired private CarMapper carMapper;
-  @Autowired private SeatConfigurationMapper seatConfigurationMapper;
-  @Autowired private WheelMapper wheelMapper;
-  @Autowired private WheelsMapper wheelsMapper;
-  @Autowired private WheelsDtoListMapper wheelsDtoListMapper;
-
   @Autowired
   @Qualifier("myConversionService")
   private ConfigurableConversionService conversionService;
 
-  @ComponentScan("org.mapstruct.extensions.spring.example.custombean")
   @Component
+  @ComponentScan(basePackageClasses = MapperSpringConfig.class)
   static class AdditionalBeanConfiguration {
     @Bean
     ConfigurableConversionService getConversionService() {
@@ -55,15 +48,6 @@ public class ConversionServiceAdapterIntegrationTest {
     ConfigurableConversionService myConversionService() {
       return new DefaultConversionService();
     }
-  }
-
-  @BeforeEach
-  void addMappersToConversionService() {
-    conversionService.addConverter(carMapper);
-    conversionService.addConverter(seatConfigurationMapper);
-    conversionService.addConverter(wheelMapper);
-    conversionService.addConverter(wheelsMapper);
-    conversionService.addConverter(wheelsDtoListMapper);
   }
 
   @Test

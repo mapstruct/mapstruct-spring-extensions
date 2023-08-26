@@ -14,8 +14,6 @@ import java.io.Writer;
 import java.time.Clock;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -42,20 +40,43 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       "org.springframework.core.convert.converter.Converter";
 
   private final ConversionServiceAdapterGenerator adapterGenerator;
+  private final ConverterScanGenerator converterScanGenerator;
+  private final ConverterScansGenerator converterScansGenerator;
+  private final ConverterRegistrationConfigurationGenerator
+      converterRegistrationConfigurationGenerator;
 
   public ConverterMapperProcessor() {
-    this(new ConversionServiceAdapterGenerator(Clock.systemUTC()));
+    this(Clock.systemUTC());
   }
 
-  ConverterMapperProcessor(final ConversionServiceAdapterGenerator adapterGenerator) {
+  ConverterMapperProcessor(final Clock clock) {
+    this(
+        new ConversionServiceAdapterGenerator(clock),
+        new ConverterScanGenerator(clock),
+        new ConverterScansGenerator(clock),
+        new ConverterRegistrationConfigurationGenerator(clock));
+  }
+
+  ConverterMapperProcessor(
+      final ConversionServiceAdapterGenerator adapterGenerator,
+      final ConverterScanGenerator converterScanGenerator,
+      final ConverterScansGenerator converterScansGenerator,
+      final ConverterRegistrationConfigurationGenerator
+          converterRegistrationConfigurationGenerator) {
     super();
     this.adapterGenerator = adapterGenerator;
+    this.converterScanGenerator = converterScanGenerator;
+    this.converterScansGenerator = converterScansGenerator;
+    this.converterRegistrationConfigurationGenerator = converterRegistrationConfigurationGenerator;
   }
 
   @Override
   public synchronized void init(final ProcessingEnvironment processingEnv) {
     super.init(processingEnv);
     adapterGenerator.init(processingEnv);
+    converterScanGenerator.init(processingEnv);
+    converterScansGenerator.init(processingEnv);
+    converterRegistrationConfigurationGenerator.init(processingEnv);
   }
 
   @Override
@@ -168,6 +189,9 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     fromToMappings.addAll(descriptor.getFromToMappings());
     descriptor.fromToMappings(fromToMappings);
     writeAdapterClassFile(descriptor);
+    if (descriptor.hasNonDefaultConversionServiceBeanName()) {
+      writeConverterScanFiles(descriptor);
+    }
   }
 
   private boolean hasConverterSupertype(Element mapper) {
@@ -194,10 +218,25 @@ public class ConverterMapperProcessor extends AbstractProcessor {
 
   private void writeAdapterClassFile(final ConversionServiceAdapterDescriptor descriptor) {
     writeOutputFile(
+        descriptor, this::openAdapterFile, adapterGenerator, descriptor::getAdapterClassName);
+  }
+
+  private void writeConverterScanFiles(final ConversionServiceAdapterDescriptor descriptor) {
+    writeOutputFile(
         descriptor,
-        this::openAdapterFile,
-        adapterGenerator::writeConversionServiceAdapter,
-        () -> descriptor.getAdapterClassName().simpleName());
+        this::openConverterScanFile,
+        converterScanGenerator,
+        descriptor::getConverterScanClassName);
+    writeOutputFile(
+        descriptor,
+        this::openConverterScansFile,
+        converterScansGenerator,
+        descriptor::getConverterScansClassName);
+    writeOutputFile(
+        descriptor,
+        this::openConverterRegistrationConfigurationFile,
+        converterRegistrationConfigurationGenerator,
+        descriptor::getConverterRegistrationConfigurationClassName);
   }
 
   private interface OpenFileFunction {
@@ -207,10 +246,10 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   private void writeOutputFile(
       final ConversionServiceAdapterDescriptor descriptor,
       final OpenFileFunction openFileFunction,
-      final BiConsumer<ConversionServiceAdapterDescriptor, Writer> generatorCall,
-      final Supplier<String> outputFilenameSupplier) {
+      final Generator generator,
+      final Supplier<ClassName> outputFileClassNameSupplier) {
     try (final Writer outputWriter = openFileFunction.open(descriptor)) {
-      generatorCall.accept(descriptor, outputWriter);
+      generator.writeGeneratedCodeToOutput(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv
           .getMessager()
@@ -218,23 +257,32 @@ public class ConverterMapperProcessor extends AbstractProcessor {
               ERROR,
               String.format(
                   "Error while opening %s output file: %s",
-                  outputFilenameSupplier.get(), e.getMessage()));
+                  outputFileClassNameSupplier.get().simpleName(), e.getMessage()));
     }
+  }
+
+  private Writer openConverterRegistrationConfigurationFile(
+      final ConversionServiceAdapterDescriptor descriptor) throws IOException {
+    return openFile(descriptor.getConverterRegistrationConfigurationClassName());
+  }
+
+  private Writer openConverterScanFile(final ConversionServiceAdapterDescriptor descriptor)
+      throws IOException {
+    return openFile(descriptor.getConverterScanClassName());
+  }
+
+  private Writer openConverterScansFile(final ConversionServiceAdapterDescriptor descriptor)
+      throws IOException {
+    return openFile(descriptor.getConverterScansClassName());
   }
 
   private Writer openAdapterFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return openFile(descriptor, desc -> desc.getAdapterClassName().canonicalName());
+    return openFile(descriptor.getAdapterClassName());
   }
 
-  private Writer openFile(
-      final ConversionServiceAdapterDescriptor descriptor,
-      final Function<ConversionServiceAdapterDescriptor, String> fileNameFunction)
-      throws IOException {
-    return processingEnv
-        .getFiler()
-        .createSourceFile(fileNameFunction.apply(descriptor))
-        .openWriter();
+  private Writer openFile(final ClassName className) throws IOException {
+    return processingEnv.getFiler().createSourceFile(className.canonicalName()).openWriter();
   }
 
   private ClassName getAdapterClassName(
