@@ -48,6 +48,16 @@ public @interface SpringMapperConfig {
   boolean lazyAnnotatedConversionServiceBean() default true;
 
   /**
+   * Indicates whether to generate {@code ConverterScan} and {@code
+   * ConverterRegistrationConfiguration} when using {@link #conversionServiceBeanName()}. Has no
+   * effect when {@link #conversionServiceBeanName()} is not set.
+   *
+   * @return {@code true} - Generate {@code ConverterScan} and {@code
+   *     ConverterRegistrationConfiguration}, {@code false} - otherwise
+   */
+  boolean generateRegistrationClasses() default false;
+
+  /**
    * Additional {@link ExternalConversion conversions} which should be made available through the
    * generated Adapter.
    *

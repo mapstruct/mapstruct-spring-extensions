@@ -13,6 +13,8 @@ public class ConversionServiceAdapterDescriptor {
   private List<Pair<TypeName, TypeName>> fromToMappings;
   private boolean lazyAnnotatedConversionServiceBean;
 
+  private boolean generateRegistrationClasses;
+
   boolean hasNonDefaultConversionServiceBeanName() {
     return isNotEmpty(getConversionServiceBeanName());
   }
@@ -53,6 +55,16 @@ public class ConversionServiceAdapterDescriptor {
   public ConversionServiceAdapterDescriptor lazyAnnotatedConversionServiceBean(
       final boolean lazyAnnotatedConversionServiceBean) {
     this.lazyAnnotatedConversionServiceBean = lazyAnnotatedConversionServiceBean;
+    return this;
+  }
+
+
+  public boolean isGenerateRegistrationClasses() {
+    return generateRegistrationClasses;
+  }
+
+  public ConversionServiceAdapterDescriptor generateRegistrationClasses(final boolean generateRegistrationClasses) {
+    this.generateRegistrationClasses = generateRegistrationClasses;
     return this;
   }
 

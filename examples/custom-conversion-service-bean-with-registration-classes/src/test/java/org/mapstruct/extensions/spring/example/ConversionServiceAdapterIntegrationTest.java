@@ -1,27 +1,24 @@
 package org.mapstruct.extensions.spring.example;
 
-import org.junit.jupiter.api.BeforeEach;
+import static org.assertj.core.api.BDDAssertions.then;
+import static org.mapstruct.extensions.spring.example.CarType.OTHER;
+import static org.mapstruct.extensions.spring.example.SeatMaterial.LEATHER;
+import static org.mapstruct.extensions.spring.example.WheelPosition.RIGHT_FRONT;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.extensions.spring.example.custombean.*;
+import org.mapstruct.extensions.spring.example.custombeanwithregistration.ConverterScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.mapstruct.extensions.spring.example.CarType.OTHER;
-import static org.mapstruct.extensions.spring.example.SeatMaterial.LEATHER;
-import static org.mapstruct.extensions.spring.example.WheelPosition.RIGHT_FRONT;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
@@ -34,18 +31,12 @@ public class ConversionServiceAdapterIntegrationTest {
   private static final int TEST_DIAMETER = 20;
   private static final WheelPosition TEST_WHEEL_POSITION = RIGHT_FRONT;
 
-  @Autowired private CarMapper carMapper;
-  @Autowired private SeatConfigurationMapper seatConfigurationMapper;
-  @Autowired private WheelMapper wheelMapper;
-  @Autowired private WheelsMapper wheelsMapper;
-  @Autowired private WheelsDtoListMapper wheelsDtoListMapper;
-
   @Autowired
   @Qualifier("myConversionService")
   private ConfigurableConversionService conversionService;
 
-  @ComponentScan("org.mapstruct.extensions.spring")
   @Component
+  @ConverterScan
   static class AdditionalBeanConfiguration {
     @Bean
     ConfigurableConversionService getConversionService() {
@@ -56,15 +47,6 @@ public class ConversionServiceAdapterIntegrationTest {
     ConfigurableConversionService myConversionService() {
       return new DefaultConversionService();
     }
-  }
-
-  @BeforeEach
-  void addMappersToConversionService() {
-    conversionService.addConverter(carMapper);
-    conversionService.addConverter(seatConfigurationMapper);
-    conversionService.addConverter(wheelMapper);
-    conversionService.addConverter(wheelsMapper);
-    conversionService.addConverter(wheelsDtoListMapper);
   }
 
   @Test

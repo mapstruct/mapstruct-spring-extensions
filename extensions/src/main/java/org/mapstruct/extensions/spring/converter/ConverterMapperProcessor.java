@@ -1,5 +1,6 @@
 package org.mapstruct.extensions.spring.converter;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toCollection;
@@ -14,6 +15,7 @@ import java.io.Writer;
 import java.time.Clock;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -99,6 +101,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return new ConversionServiceAdapterDescriptor()
         .adapterClassName(getAdapterClassName(annotations, roundEnv))
         .conversionServiceBeanName(getConversionServiceBeanName(annotations, roundEnv))
+        .generateRegistrationClasses(getGenerateRegistrationClasses(annotations, roundEnv))
         .lazyAnnotatedConversionServiceBean(
             getLazyAnnotatedConversionServiceBean(annotations, roundEnv))
         .fromToMappings(getExternalConversionMappings(annotations, roundEnv));
@@ -189,7 +192,8 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     fromToMappings.addAll(descriptor.getFromToMappings());
     descriptor.fromToMappings(fromToMappings);
     writeAdapterClassFile(descriptor);
-    if (descriptor.hasNonDefaultConversionServiceBeanName()) {
+    if (descriptor.hasNonDefaultConversionServiceBeanName()
+        && descriptor.isGenerateRegistrationClasses()) {
       writeConverterScanFiles(descriptor);
     }
   }
@@ -335,13 +339,8 @@ public class ConverterMapperProcessor extends AbstractProcessor {
 
   private static String getConversionServiceBeanName(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    return annotations.stream()
-        .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
-        .findFirst()
-        .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
-        .map(ConverterMapperProcessor::toSpringMapperConfig)
-        .map(SpringMapperConfig::conversionServiceBeanName)
-        .orElse(null);
+    return getConfigAnnotationAttribute(
+        annotations, roundEnv, SpringMapperConfig::conversionServiceBeanName, null);
   }
 
   private static Optional<? extends Element> findFirstElementAnnotatedWith(
@@ -369,13 +368,28 @@ public class ConverterMapperProcessor extends AbstractProcessor {
 
   private static boolean getLazyAnnotatedConversionServiceBean(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    return getConfigAnnotationAttribute(
+        annotations, roundEnv, SpringMapperConfig::lazyAnnotatedConversionServiceBean, TRUE);
+  }
+
+  private static boolean getGenerateRegistrationClasses(
+      final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    return getConfigAnnotationAttribute(
+        annotations, roundEnv, SpringMapperConfig::generateRegistrationClasses, FALSE);
+  }
+
+  private static <T> T getConfigAnnotationAttribute(
+      final Set<? extends TypeElement> annotations,
+      final RoundEnvironment roundEnv,
+      final Function<SpringMapperConfig, T> attributeGetter,
+      final T defaultValue) {
     return annotations.stream()
         .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
         .findFirst()
         .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
         .map(ConverterMapperProcessor::toSpringMapperConfig)
-        .map(SpringMapperConfig::lazyAnnotatedConversionServiceBean)
-        .orElse(TRUE);
+        .map(attributeGetter)
+        .orElse(defaultValue);
   }
 
   private Optional<? extends TypeMirror> getConverterSupertype(final Element mapper) {
