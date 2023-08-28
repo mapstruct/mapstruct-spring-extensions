@@ -9,21 +9,18 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.extensions.spring.example.custombeanwithregistration.ConverterScan;
+import org.mapstruct.extensions.spring.example.custombeanwithconverterscan.ConverterScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(
-    classes = {ConversionServiceAdapterIntegrationTest.AdditionalBeanConfiguration.class})
 public class ConversionServiceAdapterIntegrationTest {
   private static final String TEST_MAKE = "Volvo";
   private static final CarType TEST_CAR_TYPE = OTHER;
@@ -36,7 +33,7 @@ public class ConversionServiceAdapterIntegrationTest {
   @Qualifier("myConversionService")
   private ConversionService conversionService;
 
-  @Component
+  @Configuration
   @ConverterScan
   static class AdditionalBeanConfiguration {
     @Bean

@@ -8,11 +8,11 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 
 @Configuration
-public class ConverterRegistrationConfiguration {
+class ConverterRegistrationConfiguration {
   private final ConfigurableConversionService myConversionService;
   private final List<Converter<?, ?>> converters;
 
-  public ConverterRegistrationConfiguration(
+  ConverterRegistrationConfiguration(
       @Qualifier("myConversionService") final ConfigurableConversionService myConversionService,
       final List<Converter<?, ?>> converters) {
     this.myConversionService = myConversionService;

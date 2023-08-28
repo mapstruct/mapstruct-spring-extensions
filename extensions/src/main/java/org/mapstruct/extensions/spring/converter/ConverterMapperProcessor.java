@@ -101,7 +101,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return new ConversionServiceAdapterDescriptor()
         .adapterClassName(getAdapterClassName(annotations, roundEnv))
         .conversionServiceBeanName(getConversionServiceBeanName(annotations, roundEnv))
-        .generateRegistrationClasses(getGenerateRegistrationClasses(annotations, roundEnv))
+        .generateConverterScan(getGenerateConverterScan(annotations, roundEnv))
         .lazyAnnotatedConversionServiceBean(
             getLazyAnnotatedConversionServiceBean(annotations, roundEnv))
         .fromToMappings(getExternalConversionMappings(annotations, roundEnv));
@@ -193,7 +193,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     descriptor.fromToMappings(fromToMappings);
     writeAdapterClassFile(descriptor);
     if (descriptor.hasNonDefaultConversionServiceBeanName()
-        && descriptor.isGenerateRegistrationClasses()) {
+        && descriptor.isGenerateConverterScan()) {
       writeConverterScanFiles(descriptor);
     }
   }
@@ -372,10 +372,10 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         annotations, roundEnv, SpringMapperConfig::lazyAnnotatedConversionServiceBean, TRUE);
   }
 
-  private static boolean getGenerateRegistrationClasses(
+  private static boolean getGenerateConverterScan(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return getConfigAnnotationAttribute(
-        annotations, roundEnv, SpringMapperConfig::generateRegistrationClasses, FALSE);
+        annotations, roundEnv, SpringMapperConfig::generateConverterScan, FALSE);
   }
 
   private static <T> T getConfigAnnotationAttribute(

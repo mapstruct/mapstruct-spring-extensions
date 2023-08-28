@@ -12,11 +12,11 @@ import org.springframework.core.convert.support.ConfigurableConversionService;
         value = "org.mapstruct.extensions.spring.converter.ConverterRegistrationConfigurationGenerator",
         date = "2020-03-29T15:21:34.236Z")
 @Configuration
-public class ConverterRegistrationConfiguration {
+class ConverterRegistrationConfiguration {
   private final ConfigurableConversionService myConversionService;
   private final List<Converter<?, ?>> converters;
 
-  public ConverterRegistrationConfiguration(
+  ConverterRegistrationConfiguration(
       @Qualifier("myConversionService") final ConfigurableConversionService myConversionService,
       final List<Converter<?, ?>> converters) {
     this.myConversionService = myConversionService;

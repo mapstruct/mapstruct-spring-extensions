@@ -1,0 +1,30 @@
+[[testExtensions]]
+== Test Extensions
+
+[[converterScan]]
+=== ConverterScan
+
+In a production environment, Spring will take care of initializing the `ConversionService` and registering all generated Mappers inside it.
+However, in integration tests, the developer will typically have to take care of all that themselves.
+In order to simplify this task, the `test-extensions` module provides a `@ConverterScan` annotation which can be used much like Spring's own `@ComponentScan`.
+It will perform the same scanning task and also provide a `ConversionService` with all found Mappers already registered inside.
+This is sufficient for most tests.
+In its simplest form, the annotation can be used like this:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@ExtendWith(SpringExtension.class)
+class ConversionServiceAdapterIntegrationTest {
+  @Configuration
+  @ConverterScan(basePackageClasses = MapperSpringConfig.class)
+  static class ScanConfiguration {}
+
+  @Autowired
+  private ConversionService conversionService;
+
+  [...]
+}
+----
+====

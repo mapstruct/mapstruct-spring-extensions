@@ -23,3 +23,7 @@ include::chapter-1-introduction.asciidoc[]
 include::chapter-2-set-up.asciidoc[]
 
 include::chapter-3-mapper-as-converter.asciidoc[]
+
+include::chapter-4-external-conversions.asciidoc[]
+
+include::chapter-5-test-extensions.asciidoc[]

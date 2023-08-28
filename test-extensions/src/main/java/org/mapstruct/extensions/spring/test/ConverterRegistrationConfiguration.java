@@ -16,7 +16,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
  * org.springframework.core.convert.ConversionService} beans.
  */
 @Configuration
-public class ConverterRegistrationConfiguration {
+class ConverterRegistrationConfiguration {
 
   @Bean
   ConversionService basicConversionService(final List<Converter<?, ?>> converters) {

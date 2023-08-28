@@ -25,10 +25,9 @@ public class ConverterRegistrationConfigurationGenerator extends Generator {
   }
 
   @Override
-  protected TypeSpec createMainTypeSpec(ConversionServiceAdapterDescriptor descriptor) {
+  protected TypeSpec createMainTypeSpec(final ConversionServiceAdapterDescriptor descriptor) {
     final var converterRegistrationConfigurationTypeSpecBuilder =
-        TypeSpec.classBuilder(descriptor.getConverterRegistrationConfigurationClassName())
-            .addModifiers(PUBLIC);
+        TypeSpec.classBuilder(descriptor.getConverterRegistrationConfigurationClassName());
     final var conversionServiceFieldSpec =
         FieldSpec.builder(
                 CONFIGURABLE_CONVERSION_SERVICE_CLASS_NAME,
@@ -57,7 +56,7 @@ public class ConverterRegistrationConfigurationGenerator extends Generator {
   }
 
   private static MethodSpec createRegistrationMethodSpec(
-      FieldSpec convertersFieldSpec, FieldSpec conversionServiceFieldSpec) {
+      final FieldSpec convertersFieldSpec, final FieldSpec conversionServiceFieldSpec) {
     return MethodSpec.methodBuilder("registerConverters")
         .addAnnotation(ClassName.get("javax.annotation", "PostConstruct"))
         .addStatement(
@@ -66,12 +65,11 @@ public class ConverterRegistrationConfigurationGenerator extends Generator {
   }
 
   private static MethodSpec createConstructorSpec(
-      ParameterSpec conversionServiceParameterSpec,
-      ParameterSpec convertersParameterSpec,
-      FieldSpec conversionServiceFieldSpec,
-      FieldSpec convertersFieldSpec) {
+      final ParameterSpec conversionServiceParameterSpec,
+      final ParameterSpec convertersParameterSpec,
+      final FieldSpec conversionServiceFieldSpec,
+      final FieldSpec convertersFieldSpec) {
     return MethodSpec.constructorBuilder()
-        .addModifiers(PUBLIC)
         .addParameter(conversionServiceParameterSpec)
         .addParameter(convertersParameterSpec)
         .addStatement("this.$N = $N", conversionServiceFieldSpec, conversionServiceParameterSpec)

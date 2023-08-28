@@ -1,4 +1,4 @@
-package org.mapstruct.extensions.spring.example.custombeanwithregistration;
+package org.mapstruct.extensions.spring.example.custombeanwithconverterscan;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
