@@ -37,6 +37,15 @@ class ConverterMapperProcessorTest {
   @Spy
   private final ConversionServiceAdapterGenerator adapterGenerator =
       new ConversionServiceAdapterGenerator(Clock.systemUTC());
+  @Spy
+  private final ConverterScanGenerator converterScanGenerator =
+          new ConverterScanGenerator(Clock.systemUTC());
+  @Spy
+  private final ConverterScansGenerator converterScansGenerator =
+          new ConverterScansGenerator(Clock.systemUTC());
+  @Spy
+  private final ConverterRegistrationConfigurationGenerator converterRegistrationConfigurationGenerator =
+          new ConverterRegistrationConfigurationGenerator(Clock.systemUTC());
 
   @InjectMocks private ConverterMapperProcessor processor;
 
@@ -249,7 +258,7 @@ class ConverterMapperProcessorTest {
     then(compileResult).isTrue();
     BDDMockito.then(adapterGenerator)
         .should()
-        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+        .writeGeneratedCodeToOutput(descriptorArgumentCaptor.capture(), any(Writer.class));
     final ConversionServiceAdapterDescriptor descriptor = descriptorArgumentCaptor.getValue();
     then(descriptor).isNotNull();
     then(descriptor.getFromToMappings()).isEmpty();
@@ -273,7 +282,7 @@ class ConverterMapperProcessorTest {
     then(compileResult).isTrue();
     BDDMockito.then(adapterGenerator)
         .should()
-        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+        .writeGeneratedCodeToOutput(descriptorArgumentCaptor.capture(), any(Writer.class));
     final ConversionServiceAdapterDescriptor descriptor = descriptorArgumentCaptor.getValue();
     then(descriptor).isNotNull();
     then(descriptor.getFromToMappings())
@@ -301,7 +310,7 @@ class ConverterMapperProcessorTest {
     then(compileResult).isTrue();
     BDDMockito.then(adapterGenerator)
         .should()
-        .writeConversionServiceAdapter(descriptorArgumentCaptor.capture(), any(Writer.class));
+        .writeGeneratedCodeToOutput(descriptorArgumentCaptor.capture(), any(Writer.class));
     final ConversionServiceAdapterDescriptor descriptor = descriptorArgumentCaptor.getValue();
     then(descriptor).isNotNull();
     then(descriptor.getFromToMappings())

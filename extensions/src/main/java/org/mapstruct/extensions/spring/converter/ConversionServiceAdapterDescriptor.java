@@ -1,5 +1,7 @@
 package org.mapstruct.extensions.spring.converter;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 import java.util.List;
@@ -10,6 +12,12 @@ public class ConversionServiceAdapterDescriptor {
   private String conversionServiceBeanName;
   private List<Pair<TypeName, TypeName>> fromToMappings;
   private boolean lazyAnnotatedConversionServiceBean;
+
+  private boolean generateConverterScan;
+
+  boolean hasNonDefaultConversionServiceBeanName() {
+    return isNotEmpty(getConversionServiceBeanName());
+  }
 
   public ClassName getAdapterClassName() {
     return adapterClassName;
@@ -48,5 +56,27 @@ public class ConversionServiceAdapterDescriptor {
       final boolean lazyAnnotatedConversionServiceBean) {
     this.lazyAnnotatedConversionServiceBean = lazyAnnotatedConversionServiceBean;
     return this;
+  }
+
+
+  public boolean isGenerateConverterScan() {
+    return generateConverterScan;
+  }
+
+  public ConversionServiceAdapterDescriptor generateConverterScan(final boolean generateConverterScan) {
+    this.generateConverterScan = generateConverterScan;
+    return this;
+  }
+
+  public ClassName getConverterScanClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterScan");
+  }
+
+  public ClassName getConverterScansClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterScans");
+  }
+
+  public ClassName getConverterRegistrationConfigurationClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterRegistrationConfiguration");
   }
 }

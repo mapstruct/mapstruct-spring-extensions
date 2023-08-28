@@ -55,12 +55,15 @@ subprojects {
     apply plugin: "jacoco"
 
     group = 'org.mapstruct.extensions.spring'
-    version = '1.0.3-SNAPSHOT'
+    version = '1.1.0-SNAPSHOT'
 
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(11))
         }
+
+        withJavadocJar()
+        withSourcesJar()
     }
 
     testing {

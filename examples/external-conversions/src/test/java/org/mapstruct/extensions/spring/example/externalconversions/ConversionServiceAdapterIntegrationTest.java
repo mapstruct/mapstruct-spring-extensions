@@ -1,42 +1,24 @@
 package org.mapstruct.extensions.spring.example.externalconversions;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.convert.support.ConfigurableConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.util.Locale;
-
 import static java.util.Locale.GERMANY;
 import static org.assertj.core.api.BDDAssertions.then;
 
+import java.util.Locale;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.extensions.spring.test.ConverterScan;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(
-    classes = {ConversionServiceAdapterIntegrationTest.AdditionalBeanConfiguration.class})
 public class ConversionServiceAdapterIntegrationTest {
-  @Autowired private LocaleInfoDtoMapper localeMapper;
-  @Autowired private ConfigurableConversionService conversionService;
+  @Autowired private ConversionService conversionService;
 
-  @ComponentScan("org.mapstruct.extensions.spring")
-  @Component
-  static class AdditionalBeanConfiguration {
-    @Bean
-    ConfigurableConversionService getConversionService() {
-      return new DefaultConversionService();
-    }
-  }
-
-  @BeforeEach
-  void addMappersToConversionService() {
-    conversionService.addConverter(localeMapper);
-  }
+  @Configuration
+  @ConverterScan(basePackageClasses = MapstructConfig.class)
+  static class ScanConfiguration{}
 
   @Test
   void shouldKnowAllMappers() {

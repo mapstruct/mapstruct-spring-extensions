@@ -5,11 +5,6 @@ dependencies {
     implementation libs.spring.core
 }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {

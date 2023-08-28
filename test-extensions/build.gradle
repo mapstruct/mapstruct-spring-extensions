@@ -1,0 +1,66 @@
+apply plugin: "maven-publish"
+apply plugin: "signing"
+
+dependencies {
+    implementation libs.spring.core
+    implementation libs.spring.context
+    implementation libs.jakarta.annotation
+
+    testImplementation libs.mockito
+    testImplementation libs.bundles.junit.jupiter
+    testImplementation projects.examples.model
+    testImplementation projects.examples.noconfig
+    testImplementation libs.spring.boot.starter.test
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'mapstruct-spring-test-extensions'
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = 'MapStruct Spring Test Extensions'
+                description = 'Spring-specific MapStruct extensions for testing purposes'
+                url = 'https://mapstruct.org/'
+                packaging = 'jar'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Raimund Klein'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/mapstruct/mapstruct-spring-extensions.git'
+                    developerConnection = 'scm:git:git://github.com/mapstruct/mapstruct-spring-extensions.git'
+                    url = 'https://github.com/mapstruct/mapstruct-spring-extensions'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+            credentials {
+                username = System.getenv("OSSRH_USERNAME")
+                password = System.getenv("OSSRH_PASSWORD")
+            }
+        }
+    }
+}

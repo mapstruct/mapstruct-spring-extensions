@@ -2,6 +2,7 @@ dependencies {
     annotationProcessor project(":extensions")
     implementation projects.annotations
 
+    testImplementation projects.testExtensions
     testImplementation libs.assertj
     testImplementation libs.bundles.junit.jupiter
     implementation libs.mapstruct.core

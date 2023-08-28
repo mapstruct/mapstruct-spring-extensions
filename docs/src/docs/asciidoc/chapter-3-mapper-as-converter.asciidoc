@@ -2,8 +2,9 @@
 == Mappers as Converters
 
 MapStruct Mappers nicely match Spring's https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#core-convert-Converter-API[Converter] idea:
+
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
 @Mapper(componentModel = "spring")
@@ -17,7 +18,7 @@ public interface CarMapper extends Converter<Car, CarDto> {
 This allows using the Mapper indirectly via the `ConversionService`:
 
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
 ...
@@ -29,12 +30,17 @@ This allows using the Mapper indirectly via the `ConversionService`:
 ----
 ====
 
-All this can be achieved already with MapStruct's core functionality. However, when a Mapper wants to https://mapstruct.org/documentation/stable/reference/html/#invoking-other-mappers[invoke] another one, it can't take the route via the `ConversionService`, because the latter's `convert` method does not match the signature that MapStruct expects for a mapping method. Thus, the developer still has to add every invoked Mapper to the invoking Mapper's `uses` element. This creates (aside from a potentially long list) a tight coupling between Mappers that the `ConversionService` is designed to avoid.
+All this can be achieved already with MapStruct's core functionality.
+However, when a Mapper wants to https://mapstruct.org/documentation/stable/reference/html/#invoking-other-mappers[invoke] another one, it can't take the route via the `ConversionService`, because the latter's `convert` method does not match the signature that MapStruct expects for a mapping method.
+Thus, the developer still has to add every invoked Mapper to the invoking Mapper's `uses` element.
+This creates (aside from a potentially long list) a tight coupling between Mappers that the `ConversionService` is designed to avoid.
 
-This is where MapStruct Spring Extensions can help. Including the two artifacts in your build will generate an Adapter class that _can_ be used by an invoking Mapper. Let's say that the above CarMapper is accompanied by a SeatConfigurationMapper:
+This is where MapStruct Spring Extensions can help.
+Including the two artifacts in your build will generate an Adapter class that _can_ be used by an invoking Mapper.
+Let's say that the above CarMapper is accompanied by a SeatConfigurationMapper:
 
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
 @Mapper
@@ -49,7 +55,7 @@ public interface SeatConfigurationMapper extends Converter<SeatConfiguration, Se
 The generated Adapter class will look like this:
 
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
 @Component
@@ -73,8 +79,9 @@ public class ConversionServiceAdapter {
 ====
 
 Since this class' methods match the signature that MapStruct expects, we can now add it to the CarMapper:
+
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
 @Mapper(uses = ConversionServiceAdapter.class)
@@ -87,9 +94,14 @@ public interface CarMapper extends Converter<Car, CarDto> {
 
 [[mappersAsConvertersCustomNames]]
 === Custom Names
-By default, the generated class will be located in the package `org.mapstruct.extensions.spring.converter` and receive the name `ConversionServiceAdapter`. Typically, you will want to change these names, most often at least the package. This can be accomplished by adding the `SpringMapperConfig` annotation on any class within your regular source code. One natural candidate would be your https://mapstruct.org/documentation/stable/reference/html/#shared-configurations[shared configuration] if you use this:
+
+By default, the generated class will be located in the package `org.mapstruct.extensions.spring.converter` and receive the name `ConversionServiceAdapter`.
+Typically, you will want to change these names, most often at least the package.
+This can be accomplished by adding the `SpringMapperConfig` annotation on any class within your regular source code.
+One natural candidate would be your https://mapstruct.org/documentation/stable/reference/html/#shared-configurations[shared configuration] if you use this:
+
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
 import org.mapstruct.MapperConfig;
@@ -104,11 +116,15 @@ public interface MapperSpringConfig {
 
 Note: If you do _not_ specify the `conversionServiceAdapterPackage` element, the generated Adapter class will reside in the same package as the annotated Config.
 ====
+
 [[customConversionService]]
 === Specifying The Conversion Service Bean Name
-If your application has multiple `ConversionService` beans, you will need to specify the bean name. The `SpringMapperConfig` allows you to specify it using the `conversionServiceBeanName` property.
+
+If your application has multiple `ConversionService` beans, you will need to specify the bean name.
+The `SpringMapperConfig` allows you to specify it using the `conversionServiceBeanName` property.
+
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
 import org.mapstruct.MapperConfig;
@@ -120,53 +136,34 @@ public interface MapperSpringConfig {
 }
 ----
 ====
-[[externalConversions]]
-=== External Conversions
-Spring ships with a variety of https://github.com/spring-projects/spring-framework/tree/main/spring-core/src/main/java/org/springframework/core/convert/support[builtin conversions], e.g. `String` to `Locale` or `Object` to `Optional`. In order to use these (or your own conversions from another module) in the same fashion, you can add them as `externalConversions` to your `SpringMapperConfig`:
+
+[[generateConverterScan]]
+==== Modified ConverterScan
+
+When the `conversionServiceBeanName` property is set, the built-in <<converterScan>> cannot be used in tests as it does not pick up this property.
+However, setting the property `generateConverterScan` to `true` will create an alternative inside the project.
+Important to note: This version will _not_ create a `ConversionService` with the given bean name, but merely register all Mappers with the bean identified by the given name. This leads to two practical differences:
+
+- Unlike its <<testExtensions>> counterpart, this version is perfectly suited to be used in production code.
+- In a test, the developer will still have to provide a `ConfigurableConversionService` themselves, e.g.:
 ====
-[source, java, linenums]
+[source,java,linenums]
 [subs="verbatim,attributes"]
 ----
-import org.mapstruct.MapperConfig;
-import org.mapstruct.extensions.spring.ExternalConversion;
-import org.mapstruct.extensions.spring.SpringMapperConfig;
-
-import java.util.Locale;
-
-@MapperConfig(componentModel = "spring")
-@SpringMapperConfig(
-    externalConversions = @ExternalConversion(sourceType = String.class, targetType = Locale.class))
-public interface MapstructConfig {}
-----
-====
-
-The processor will add the corresponding methods to the generated adapter so MapStruct can use them in the same fashion as the ones for the Converter Mappers in the same module:
-====
-[source, java, linenums]
-[subs="verbatim,attributes"]
-----
-import java.lang.String;
-import java.util.Locale;
-import javax.annotation.Generated;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.stereotype.Component;
-
-@Generated(
-    value = "org.mapstruct.extensions.spring.converter.ConversionServiceAdapterGenerator",
-    date = "2021-06-25T18:51:21.585Z"
-)
-@Component
-public class ConversionServiceAdapter {
-  private final ConversionService conversionService;
-
-  public ConversionServiceAdapter(@Lazy final ConversionService conversionService) {
-    this.conversionService = conversionService;
+@ExtendWith(SpringExtension.class)
+public class ConversionServiceAdapterIntegrationTest {
+  @Configuration
+  @ConverterScan
+  static class AdditionalBeanConfiguration {
+    @Bean
+    ConfigurableConversionService myConversionService() {
+      return new DefaultConversionService();
+    }
   }
 
-  public Locale mapStringToLocale(final String source) {
-    return (Locale) conversionService.convert(source, TypeDescriptor.valueOf(String.class), TypeDescriptor.valueOf(Locale.class));
-  }
+  @Autowired
+  @Qualifier("myConversionService")
+  private ConversionService conversionService;
 }
 ----
 ====

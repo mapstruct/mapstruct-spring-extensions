@@ -1,31 +1,17 @@
 package org.mapstruct.extensions.spring.converter;
 
 import static java.lang.Boolean.TRUE;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.function.UnaryOperator.identity;
 import static javax.lang.model.SourceVersion.RELEASE_8;
 import static javax.lang.model.SourceVersion.RELEASE_9;
-import static org.apache.commons.io.IOUtils.resourceToString;
-import static org.assertj.core.api.BDDAssertions.then;
-import static org.assertj.core.api.BDDAssertions.thenIllegalStateException;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.ParameterizedTypeName;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.time.Clock;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.Map;
-import java.util.function.UnaryOperator;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,16 +21,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 @ExtendWith(MockitoExtension.class)
-class ConversionServiceAdapterGeneratorTest {
+class ConversionServiceAdapterGeneratorTest extends GeneratorTest {
   @Mock private Elements elements;
 
   private boolean isAtLeastJava9;
 
-  private static final Clock FIXED_CLOCK =
-      Clock.fixed(
-          ZonedDateTime.of(2020, 3, 29, 15, 21, 34, (int) (236 * Math.pow(10, 6)), ZoneId.of("Z"))
-              .toInstant(),
-          ZoneId.of("Z"));
   private final ConversionServiceAdapterGenerator underTest =
       new ConversionServiceAdapterGenerator(FIXED_CLOCK);
 
@@ -80,23 +61,26 @@ class ConversionServiceAdapterGeneratorTest {
       @Test
       void shouldGenerateMatchingOutput() throws IOException {
         ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterJava8Generated.java");
+            "ConversionServiceAdapterJava8Generated.java",
+            underTest::writeGeneratedCodeToOutput);
       }
 
       @Test
       void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
         ConversionServiceAdapterGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
-                "ConversionServiceAdapterCustomBeanJava8Generated.java");
+                "ConversionServiceAdapterCustomBeanJava8Generated.java",
+                underTest::writeGeneratedCodeToOutput);
       }
 
       @Test
       void shouldSuppressDateGenerationWhenProcessingEnvironmentHasSuppressionSetToTrue()
-              throws IOException {
+          throws IOException {
         given(processingEnvironment.getOptions())
-                .willReturn(Map.of("mapstruct.suppressGeneratorTimestamp", String.valueOf(TRUE)));
+            .willReturn(Map.of("mapstruct.suppressGeneratorTimestamp", String.valueOf(TRUE)));
         ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-                "ConversionServiceAdapterJava8GeneratedNoDate.java");
+            "ConversionServiceAdapterJava8GeneratedNoDate.java",
+            underTest::writeGeneratedCodeToOutput);
       }
     }
 
@@ -112,14 +96,16 @@ class ConversionServiceAdapterGeneratorTest {
       @Test
       void shouldGenerateMatchingOutput() throws IOException {
         ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterJava9PlusGenerated.java");
+            "ConversionServiceAdapterJava9PlusGenerated.java",
+            underTest::writeGeneratedCodeToOutput);
       }
 
       @Test
       void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
         ConversionServiceAdapterGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
-                "ConversionServiceAdapterCustomBeanJava9PlusGenerated.java");
+                "ConversionServiceAdapterCustomBeanJava9PlusGenerated.java",
+                underTest::writeGeneratedCodeToOutput);
       }
 
       @Test
@@ -128,7 +114,8 @@ class ConversionServiceAdapterGeneratorTest {
         given(processingEnvironment.getOptions())
             .willReturn(Map.of("mapstruct.suppressGeneratorTimestamp", String.valueOf(TRUE)));
         ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterJava9PlusGeneratedNoDate.java");
+            "ConversionServiceAdapterJava9PlusGeneratedNoDate.java",
+            underTest::writeGeneratedCodeToOutput);
       }
     }
 
@@ -142,73 +129,31 @@ class ConversionServiceAdapterGeneratorTest {
       @Test
       void shouldGenerateMatchingOutput() throws IOException {
         ConversionServiceAdapterGeneratorTest.this.shouldGenerateMatchingOutput(
-            "ConversionServiceAdapterNoGenerated.java");
+            "ConversionServiceAdapterNoGenerated.java", underTest::writeGeneratedCodeToOutput);
       }
 
       @Test
       void shouldGenerateMatchingOutputWhenUsingCustomConversionService() throws IOException {
         ConversionServiceAdapterGeneratorTest.this
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
-                "ConversionServiceAdapterCustomBeanNoGenerated.java");
+                "ConversionServiceAdapterCustomBeanNoGenerated.java",
+                underTest::writeGeneratedCodeToOutput);
       }
     }
-  }
-
-  void shouldGenerateMatchingOutput(
-      final String expectedContentFileName,
-      final UnaryOperator<ConversionServiceAdapterDescriptor> descriptorDecorator)
-      throws IOException {
-    final ConversionServiceAdapterDescriptor descriptor =
-        descriptorDecorator.apply(
-            new ConversionServiceAdapterDescriptor()
-                .adapterClassName(
-                    ClassName.get(
-                        ConversionServiceAdapterGeneratorTest.class.getPackage().getName(),
-                        "ConversionServiceAdapter"))
-                .fromToMappings(
-                    List.of(
-                        Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto")),
-                        Pair.of(
-                            ParameterizedTypeName.get(
-                                ClassName.get(List.class), ClassName.get("test", "Car")),
-                            ParameterizedTypeName.get(
-                                ClassName.get(List.class), ClassName.get("test", "CarDto")))))
-                .lazyAnnotatedConversionServiceBean(true));
-    final StringWriter outputWriter = new StringWriter();
-
-    // When
-    underTest.writeConversionServiceAdapter(descriptor, outputWriter);
-
-    // Then
-    then(outputWriter.toString())
-        .isEqualToIgnoringWhitespace(resourceToString('/' + expectedContentFileName, UTF_8));
-  }
-
-  void shouldGenerateMatchingOutput(final String expectedContentFileName) throws IOException {
-    shouldGenerateMatchingOutput(expectedContentFileName, identity());
-  }
-
-  void shouldGenerateMatchingOutputWhenUsingCustomConversionService(
-      final String expectedContentFileName) throws IOException {
-    shouldGenerateMatchingOutput(
-        expectedContentFileName,
-        descriptor -> descriptor.conversionServiceBeanName("myConversionService"));
   }
 
   @Nested
   class Init {
     @Test
     void shouldInitWithProcessingEnvironment() {
-      final var processingEnv = mock(ProcessingEnvironment.class);
-      underTest.init(processingEnv);
-      then(underTest.getProcessingEnvironment()).isEqualTo(processingEnv);
+      ConversionServiceAdapterGeneratorTest.this.shouldInitWithProcessingEnvironment(
+          underTest::init, underTest::getProcessingEnvironment);
     }
 
     @Test
     void shouldThrowIllegalStateExceptionWhenCalledRepeatedly() {
-      final var processingEnv = mock(ProcessingEnvironment.class);
-      underTest.init(processingEnv);
-      thenIllegalStateException().isThrownBy(() -> underTest.init(processingEnv));
+      ConversionServiceAdapterGeneratorTest.this
+          .shouldThrowIllegalStateExceptionWhenCalledRepeatedly(underTest::init);
     }
   }
 }
