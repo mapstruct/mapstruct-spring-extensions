@@ -27,7 +27,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 @SupportedAnnotationTypes({
@@ -107,7 +106,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .fromToMappings(getExternalConversionMappings(annotations, roundEnv));
   }
 
-  private List<Pair<TypeName, TypeName>> getExternalConversionMappings(
+  private List<FromToMapping> getExternalConversionMappings(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return annotations.stream()
         .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
@@ -119,22 +118,22 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .map(Entry::getValue)
         .map(AnnotationValue::getValue)
         .map(List.class::cast)
-        .map(this::toSourceTargetTypeNamePairs)
+        .map(this::toFromToMappings)
         .orElse(emptyList());
   }
 
-  private List<Pair<TypeName, TypeName>> toSourceTargetTypeNamePairs(
-      final List<? extends AnnotationMirror> list) {
+  private List<FromToMapping> toFromToMappings(final List<? extends AnnotationMirror> list) {
     return list.stream()
         .map(AnnotationMirror::getElementValues)
-        .map(this::toSourceTargetTypeNamePair)
+        .map(this::toFromToMapping)
         .collect(toList());
   }
 
-  private Pair<TypeName, TypeName> toSourceTargetTypeNamePair(
+  private FromToMapping toFromToMapping(
       final Map<? extends ExecutableElement, ? extends AnnotationValue> elementMap) {
-    return Pair.of(
-        TypeName.get(findSourceType(elementMap)), TypeName.get(findTargetType(elementMap)));
+    return new FromToMapping()
+        .source(TypeName.get(findSourceType(elementMap)))
+        .target(TypeName.get(findTargetType(elementMap)));
   }
 
   private Optional<? extends Entry<? extends ExecutableElement, ? extends AnnotationValue>>
@@ -181,7 +180,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final RoundEnvironment roundEnv,
       final ConversionServiceAdapterDescriptor descriptor,
       final TypeElement annotation) {
-    final List<Pair<TypeName, TypeName>> fromToMappings =
+    final List<FromToMapping> fromToMappings =
         roundEnv.getElementsAnnotatedWith(annotation).stream()
             .filter(ConverterMapperProcessor::isKindDeclared)
             .filter(this::hasConverterSupertype)
@@ -206,10 +205,11 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return mapper.asType().getKind() == DECLARED;
   }
 
-  private static Pair<TypeName, TypeName> toFromToMapping(
+  private static FromToMapping toFromToMapping(
       final List<? extends TypeMirror> sourceTypeTargetType) {
-    return Pair.of(
-        TypeName.get(sourceTypeTargetType.get(0)), TypeName.get(sourceTypeTargetType.get(1)));
+    return new FromToMapping()
+        .source(TypeName.get(sourceTypeTargetType.get(0)))
+        .target(TypeName.get(sourceTypeTargetType.get(1)));
   }
 
   private List<? extends TypeMirror> toTypeArguments(final Element mapper) {

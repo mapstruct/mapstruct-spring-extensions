@@ -11,7 +11,6 @@ import java.time.Clock;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class ConversionServiceAdapterGenerator extends Generator {
   private static final ClassName CONVERSION_SERVICE_CLASS_NAME =
@@ -151,45 +150,45 @@ public class ConversionServiceAdapterGenerator extends Generator {
       final FieldSpec injectedConversionServiceFieldSpec) {
     return descriptor.getFromToMappings().stream()
         .map(
-            sourceTargetPair ->
-                toMappingMethodSpec(injectedConversionServiceFieldSpec, sourceTargetPair))
+            fromToMapping ->
+                toMappingMethodSpec(injectedConversionServiceFieldSpec, fromToMapping))
         .collect(toList());
   }
 
   private MethodSpec toMappingMethodSpec(
       final FieldSpec injectedConversionServiceFieldSpec,
-      final Pair<TypeName, TypeName> sourceTargetPair) {
-    final ParameterSpec sourceParameterSpec = buildSourceParameterSpec(sourceTargetPair.getLeft());
+      final FromToMapping fromToMapping) {
+    final ParameterSpec sourceParameterSpec = buildSourceParameterSpec(fromToMapping.getSource());
     return MethodSpec.methodBuilder(
             String.format(
                 "map%sTo%s",
-                collectionOfNameIfApplicable(sourceTargetPair.getLeft()),
-                collectionOfNameIfApplicable(sourceTargetPair.getRight())))
+                collectionOfNameIfApplicable(fromToMapping.getSource()),
+                collectionOfNameIfApplicable(fromToMapping.getTarget())))
         .addParameter(sourceParameterSpec)
         .addModifiers(PUBLIC)
-        .returns(sourceTargetPair.getRight())
+        .returns(fromToMapping.getTarget())
         .addStatement(
             String.format(
                 "return ($T) $N.convert($N, %s, %s)",
-                typeDescriptorFormat(sourceTargetPair.getLeft()),
-                typeDescriptorFormat(sourceTargetPair.getRight())),
+                typeDescriptorFormat(fromToMapping.getSource()),
+                typeDescriptorFormat(fromToMapping.getTarget())),
             allTypeDescriptorArguments(
-                injectedConversionServiceFieldSpec, sourceParameterSpec, sourceTargetPair))
+                injectedConversionServiceFieldSpec, sourceParameterSpec, fromToMapping))
         .build();
   }
 
   private Object[] allTypeDescriptorArguments(
       final FieldSpec injectedConversionServiceFieldSpec,
       final ParameterSpec sourceParameterSpec,
-      final Pair<TypeName, TypeName> sourceTargetPair) {
+      final FromToMapping fromToMapping) {
     return concat(
             concat(
                 Stream.of(
-                    sourceTargetPair.getRight(),
+                    fromToMapping.getTarget(),
                     injectedConversionServiceFieldSpec,
                     sourceParameterSpec),
-                typeDescriptorArguments(sourceTargetPair.getLeft())),
-            typeDescriptorArguments(sourceTargetPair.getRight()))
+                typeDescriptorArguments(fromToMapping.getSource())),
+            typeDescriptorArguments(fromToMapping.getTarget()))
         .toArray();
   }
 

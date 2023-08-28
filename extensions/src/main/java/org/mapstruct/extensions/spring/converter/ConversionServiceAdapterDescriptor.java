@@ -3,14 +3,12 @@ package org.mapstruct.extensions.spring.converter;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
 import java.util.List;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class ConversionServiceAdapterDescriptor {
   private ClassName adapterClassName;
   private String conversionServiceBeanName;
-  private List<Pair<TypeName, TypeName>> fromToMappings;
+  private List<FromToMapping> fromToMappings;
   private boolean lazyAnnotatedConversionServiceBean;
 
   private boolean generateConverterScan;
@@ -38,12 +36,12 @@ public class ConversionServiceAdapterDescriptor {
     return this;
   }
 
-  public List<Pair<TypeName, TypeName>> getFromToMappings() {
+  public List<FromToMapping> getFromToMappings() {
     return fromToMappings;
   }
 
   public ConversionServiceAdapterDescriptor fromToMappings(
-      final List<Pair<TypeName, TypeName>> fromToMappings) {
+      final List<FromToMapping> fromToMappings) {
     this.fromToMappings = fromToMappings;
     return this;
   }

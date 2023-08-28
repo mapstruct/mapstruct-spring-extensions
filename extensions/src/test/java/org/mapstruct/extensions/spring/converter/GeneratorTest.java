@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import javax.annotation.processing.ProcessingEnvironment;
-import org.apache.commons.lang3.tuple.Pair;
 
 abstract class GeneratorTest {
   protected static final Clock FIXED_CLOCK =
@@ -44,12 +43,16 @@ abstract class GeneratorTest {
                         "ConversionServiceAdapter"))
                 .fromToMappings(
                     List.of(
-                        Pair.of(ClassName.get("test", "Car"), ClassName.get("test", "CarDto")),
-                        Pair.of(
-                            ParameterizedTypeName.get(
-                                ClassName.get(List.class), ClassName.get("test", "Car")),
-                            ParameterizedTypeName.get(
-                                ClassName.get(List.class), ClassName.get("test", "CarDto")))))
+                        new FromToMapping()
+                            .source(ClassName.get("test", "Car"))
+                            .target(ClassName.get("test", "CarDto")),
+                        new FromToMapping()
+                            .source(
+                                ParameterizedTypeName.get(
+                                    ClassName.get(List.class), ClassName.get("test", "Car")))
+                            .target(
+                                ParameterizedTypeName.get(
+                                    ClassName.get(List.class), ClassName.get("test", "CarDto")))))
                 .lazyAnnotatedConversionServiceBean(true));
     final StringWriter outputWriter = new StringWriter();
 
