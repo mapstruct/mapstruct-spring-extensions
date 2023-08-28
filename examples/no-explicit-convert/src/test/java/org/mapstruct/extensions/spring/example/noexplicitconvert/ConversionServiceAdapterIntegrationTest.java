@@ -1,47 +1,31 @@
 package org.mapstruct.extensions.spring.example.noexplicitconvert;
 
-import org.junit.jupiter.api.BeforeEach;
+import static org.assertj.core.api.BDDAssertions.then;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.extensions.spring.converter.ConversionServiceAdapter;
+import org.mapstruct.extensions.spring.test.ConverterRegistrationConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.convert.support.ConfigurableConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.stereotype.Component;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.assertj.core.api.BDDAssertions.then;
-
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(
-    classes = {ConversionServiceAdapterIntegrationTest.AdditionalBeanConfiguration.class})
+    classes = {
+      ConverterRegistrationConfiguration.class,
+      SimplePointMapperImpl.class,
+      SimpleLineMapperImpl.class,
+      ConversionServiceAdapter.class
+    })
 public class ConversionServiceAdapterIntegrationTest {
   private static final int TEST_ORIGIN_X = 5;
   private static final int TEST_ORIGIN_Y = 20;
   private static final int TEST_DESTINATION_X = 30;
   private static final int TEST_DESTINATION_Y = 23;
 
-  @Autowired private SimplePointMapper pointMapper;
-  @Autowired private SimpleLineMapper lineMapper;
-  @Autowired private ConfigurableConversionService conversionService;
-
-  @ComponentScan("org.mapstruct.extensions.spring")
-  @Component
-  static class AdditionalBeanConfiguration {
-    @Bean
-    ConfigurableConversionService getConversionService() {
-      return new DefaultConversionService();
-    }
-  }
-
-  @BeforeEach
-  void addMappersToConversionService() {
-    conversionService.addConverter(pointMapper);
-    conversionService.addConverter(lineMapper);
-  }
+  @Autowired private ConversionService conversionService;
 
   @Test
   void shouldKnowAllMappers() {
@@ -98,7 +82,9 @@ public class ConversionServiceAdapterIntegrationTest {
     final var sourceLine = simpleLine(origin, destination);
 
     // When
-    final var pointDto = conversionServiceAdapter.mapSimplePointToPointDto(simplePoint(TEST_ORIGIN_X, TEST_DESTINATION_Y));
+    final var pointDto =
+        conversionServiceAdapter.mapSimplePointToPointDto(
+            simplePoint(TEST_ORIGIN_X, TEST_DESTINATION_Y));
     final var lineDto = conversionServiceAdapter.mapSimpleLineToLineDto(sourceLine);
 
     // Then
