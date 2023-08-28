@@ -11,24 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.extensions.spring.example.adapter.ConversionServiceAdapter;
 import org.mapstruct.extensions.spring.example.packagename.*;
-import org.mapstruct.extensions.spring.test.ConverterRegistrationConfiguration;
+import org.mapstruct.extensions.spring.test.ConverterScan;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(
-    classes = {
-      ConverterRegistrationConfiguration.class,
-      CarMapperImpl.class,
-      ConversionServiceAdapter.class,
-      SeatConfigurationMapperImpl.class,
-      WheelMapperImpl.class,
-      WheelsDtoListMapperImpl.class,
-      WheelsMapperImpl.class
-    })
 public class ConversionServiceAdapterIntegrationTest {
   private static final String TEST_MAKE = "Volvo";
   private static final CarType TEST_CAR_TYPE = OTHER;
@@ -38,6 +28,10 @@ public class ConversionServiceAdapterIntegrationTest {
   private static final WheelPosition TEST_WHEEL_POSITION = RIGHT_FRONT;
 
   @Autowired private ConversionService conversionService;
+
+  @Configuration
+  @ConverterScan(basePackageClasses = {MapperSpringConfig.class, ConversionServiceAdapter.class})
+  static class ScanConfiguration{}
 
   @Test
   void shouldKnowAllMappers() {

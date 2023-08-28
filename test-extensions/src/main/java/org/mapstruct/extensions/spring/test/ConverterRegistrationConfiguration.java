@@ -10,10 +10,10 @@ import org.springframework.core.convert.support.DefaultConversionService;
 
 /**
  * Registers all available {@link Converter Converters} with the injected {@link
- * ConfigurableConversionService}. A standard Spring Boot project will do this automatically and+
- * there should be no need to include this class explicitly. It is intended for tests and situations
- * where there is more than one {@link org.springframework.core.convert.ConversionService} bean in
- * the application context.
+ * ConfigurableConversionService}. A standard Spring Boot project will do this automatically, so
+ * most production code will have no need to include this class explicitly. It is intended for tests
+ * and situations where the application context contains more than one {@link
+ * org.springframework.core.convert.ConversionService} beans.
  */
 @Configuration
 public class ConverterRegistrationConfiguration {

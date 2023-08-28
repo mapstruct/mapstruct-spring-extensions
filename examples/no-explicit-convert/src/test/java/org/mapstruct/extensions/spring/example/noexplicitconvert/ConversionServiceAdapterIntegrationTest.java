@@ -6,26 +6,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.extensions.spring.converter.ConversionServiceAdapter;
 import org.mapstruct.extensions.spring.test.ConverterRegistrationConfiguration;
+import org.mapstruct.extensions.spring.test.ConverterScan;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(
-    classes = {
-      ConverterRegistrationConfiguration.class,
-      SimplePointMapperImpl.class,
-      SimpleLineMapperImpl.class,
-      ConversionServiceAdapter.class
-    })
-public class ConversionServiceAdapterIntegrationTest {
+class ConversionServiceAdapterIntegrationTest {
   private static final int TEST_ORIGIN_X = 5;
   private static final int TEST_ORIGIN_Y = 20;
   private static final int TEST_DESTINATION_X = 30;
   private static final int TEST_DESTINATION_Y = 23;
 
   @Autowired private ConversionService conversionService;
+
+  @Configuration
+  @ConverterScan(basePackageClasses = {MapstructConfig.class, ConversionServiceAdapter.class})
+  static class ScanConfiguration{}
 
   @Test
   void shouldKnowAllMappers() {

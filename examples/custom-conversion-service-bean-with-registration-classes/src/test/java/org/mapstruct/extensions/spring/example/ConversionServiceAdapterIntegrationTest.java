@@ -13,6 +13,7 @@ import org.mapstruct.extensions.spring.example.custombeanwithregistration.Conver
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
@@ -33,7 +34,7 @@ public class ConversionServiceAdapterIntegrationTest {
 
   @Autowired
   @Qualifier("myConversionService")
-  private ConfigurableConversionService conversionService;
+  private ConversionService conversionService;
 
   @Component
   @ConverterScan

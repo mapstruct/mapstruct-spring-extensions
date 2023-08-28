@@ -6,21 +6,19 @@ import static org.assertj.core.api.BDDAssertions.then;
 import java.util.Locale;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.extensions.spring.test.ConverterRegistrationConfiguration;
+import org.mapstruct.extensions.spring.test.ConverterScan;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(
-    classes = {
-      ConverterRegistrationConfiguration.class,
-      LocaleInfoDtoMapperImpl.class,
-      ConversionServiceAdapter.class
-    })
 public class ConversionServiceAdapterIntegrationTest {
   @Autowired private ConversionService conversionService;
+
+  @Configuration
+  @ConverterScan(basePackageClasses = MapstructConfig.class)
+  static class ScanConfiguration{}
 
   @Test
   void shouldKnowAllMappers() {
