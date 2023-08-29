@@ -160,10 +160,13 @@ public class ConversionServiceAdapterGenerator extends Generator {
       final FromToMapping fromToMapping) {
     final ParameterSpec sourceParameterSpec = buildSourceParameterSpec(fromToMapping.getSource());
     return MethodSpec.methodBuilder(
-            String.format(
-                "map%sTo%s",
-                collectionOfNameIfApplicable(fromToMapping.getSource()),
-                collectionOfNameIfApplicable(fromToMapping.getTarget())))
+            fromToMapping
+                .getAdapterMethodName()
+                .orElse(
+                    String.format(
+                        "map%sTo%s",
+                        collectionOfNameIfApplicable(fromToMapping.getSource()),
+                        collectionOfNameIfApplicable(fromToMapping.getTarget()))))
         .addParameter(sourceParameterSpec)
         .addModifiers(PUBLIC)
         .returns(fromToMapping.getTarget())

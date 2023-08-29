@@ -48,3 +48,41 @@ public class ConversionServiceAdapter {
 }
 ----
 ====
+
+[[externalAdapterMethodName]]
+=== Modifying the name for the generated adapter method
+
+By default, the adapter class will contain method names of the form `map<SourceTypeName>To<targetTypeName>`.
+If you wish to change this, you can do so on a per-conversion basis by setting the property `adapterMethodName`:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@MapperConfig(componentModel = "spring")
+@SpringMapperConfig(
+    externalConversions = @ExternalConversion(sourceType = Blob.class, targetType = byte[].class, adapterMethodName = "blob2Bytes"))
+public interface MapstructConfig {}
+----
+====
+
+This changes the generated method name to be the property's value:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@Component
+public class ConversionServiceAdapter {
+  private final ConversionService conversionService;
+
+  public ConversionServiceAdapter(@Lazy final ConversionService conversionService) {
+    this.conversionService = conversionService;
+  }
+
+  public byte[] blob2Bytes(final Blob source) {
+    return (byte[]) conversionService.convert(source, TypeDescriptor.valueOf(Blob.class), TypeDescriptor.valueOf(byte[].class));
+  }
+}
+----
+====

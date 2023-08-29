@@ -11,6 +11,6 @@ import java.util.Locale;
 @SpringMapperConfig(
     externalConversions = {
       @ExternalConversion(sourceType = String.class, targetType = Locale.class),
-      @ExternalConversion(sourceType = Blob.class, targetType = byte[].class)
+      @ExternalConversion(sourceType = Blob.class, targetType = byte[].class, adapterMethodName = "blob2Bytes")
     })
 public interface MapstructConfig {}

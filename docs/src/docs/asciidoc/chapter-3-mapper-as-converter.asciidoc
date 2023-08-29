@@ -142,10 +142,12 @@ public interface MapperSpringConfig {
 
 When the `conversionServiceBeanName` property is set, the built-in <<converterScan>> cannot be used in tests as it does not pick up this property.
 However, setting the property `generateConverterScan` to `true` will create an alternative inside the project.
-Important to note: This version will _not_ create a `ConversionService` with the given bean name, but merely register all Mappers with the bean identified by the given name. This leads to two practical differences:
+Important to note: This version will _not_ create a `ConversionService` with the given bean name, but merely register all Mappers with the bean identified by the given name.
+This leads to two practical differences:
 
 - Unlike its <<testExtensions>> counterpart, this version is perfectly suited to be used in production code.
 - In a test, the developer will still have to provide a `ConfigurableConversionService` themselves, e.g.:
+
 ====
 [source,java,linenums]
 [subs="verbatim,attributes"]
@@ -164,6 +166,46 @@ public class ConversionServiceAdapterIntegrationTest {
   @Autowired
   @Qualifier("myConversionService")
   private ConversionService conversionService;
+}
+----
+====
+
+[[adapterMethodName]]
+=== Modifying the name for the generated adapter method
+
+By default, the adapter class will contain method names of the form `map<SourceTypeName>To<targetTypeName>`.
+If you wish to change this, you can do so on a per-Mapper basis by applying the annotation `@AdapterMethodName`:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@Mapper(config = MapperSpringConfig.class)
+@AdapterMethodName("toDto")
+public interface WheelMapper extends Converter<Wheel, WheelDto> {
+    @Override
+    WheelDto convert(Wheel source);
+}
+----
+====
+
+This changes the generated method name to be the annotation's `value` attribute:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@Component
+public class ConversionServiceAdapter {
+private final ConversionService conversionService;
+
+  public ConversionServiceAdapter(@Lazy final ConversionService conversionService) {
+    this.conversionService = conversionService;
+  }
+
+  public WheelDto toDto(final Wheel source) {
+    return (WheelDto) conversionService.convert(source, TypeDescriptor.valueOf(Wheel.class), TypeDescriptor.valueOf(WheelDto.class));
+  }
 }
 ----
 ====

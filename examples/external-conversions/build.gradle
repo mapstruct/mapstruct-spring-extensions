@@ -10,5 +10,6 @@ dependencies {
     annotationProcessor libs.mapstruct.processor
     implementation libs.spring.context
     implementation libs.spring.core
+    testImplementation libs.mockito
     testImplementation libs.spring.test
 }

@@ -17,4 +17,5 @@ public @interface ExternalConversion {
   Class<?> sourceType();
 
   Class<?> targetType();
+  String adapterMethodName() default "";
 }

@@ -45,7 +45,8 @@ abstract class GeneratorTest {
                     List.of(
                         new FromToMapping()
                             .source(ClassName.get("test", "Car"))
-                            .target(ClassName.get("test", "CarDto")),
+                            .target(ClassName.get("test", "CarDto"))
+                            .adapterMethodName("toDto"),
                         new FromToMapping()
                             .source(
                                 ParameterizedTypeName.get(

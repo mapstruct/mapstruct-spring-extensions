@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.tools.Diagnostic.Kind.ERROR;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -27,6 +28,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
+import org.mapstruct.extensions.spring.AdapterMethodName;
 import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 @SupportedAnnotationTypes({
@@ -133,7 +135,8 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final Map<? extends ExecutableElement, ? extends AnnotationValue> elementMap) {
     return new FromToMapping()
         .source(TypeName.get(findSourceType(elementMap)))
-        .target(TypeName.get(findTargetType(elementMap)));
+        .target(TypeName.get(findTargetType(elementMap)))
+        .adapterMethodName(findAdapterMethodName(elementMap));
   }
 
   private Optional<? extends Entry<? extends ExecutableElement, ? extends AnnotationValue>>
@@ -145,6 +148,13 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   private boolean hasNameExternalConversions(
       final Entry<? extends ExecutableElement, ? extends AnnotationValue> entry) {
     return hasName(entry.getKey().getSimpleName(), "externalConversions");
+  }
+
+  private static String findAdapterMethodName(
+      final Map<? extends ExecutableElement, ? extends AnnotationValue>
+          externalConversionElementMap) {
+    return defaultIfBlank(
+        findAttribute(externalConversionElementMap, "adapterMethodName", String.class), null);
   }
 
   private static TypeMirror findTargetType(
@@ -163,13 +173,21 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final Map<? extends ExecutableElement, ? extends AnnotationValue>
           externalConversionElementMap,
       final String attributeName) {
+    return findAttribute(externalConversionElementMap, attributeName, TypeMirror.class);
+  }
+
+  private static <T> T findAttribute(
+      final Map<? extends ExecutableElement, ? extends AnnotationValue>
+          externalConversionElementMap,
+      final String attributeName,
+      final Class<T> attributeClass) {
     return externalConversionElementMap.entrySet().stream()
         .filter(entry -> hasName(entry.getKey().getSimpleName(), attributeName))
         .map(Entry::getValue)
         .map(AnnotationValue::getValue)
-        .map(TypeMirror.class::cast)
+        .map(attributeClass::cast)
         .findFirst()
-        .orElseThrow(IllegalStateException::new);
+        .orElse(null);
   }
 
   private boolean isMapperAnnotation(TypeElement annotation) {
@@ -184,9 +202,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         roundEnv.getElementsAnnotatedWith(annotation).stream()
             .filter(ConverterMapperProcessor::isKindDeclared)
             .filter(this::hasConverterSupertype)
-            .map(this::toTypeArguments)
-            .filter(Objects::nonNull)
-            .map(ConverterMapperProcessor::toFromToMapping)
+            .map(this::toFromToMapping)
             .collect(toCollection(ArrayList::new));
     fromToMappings.addAll(descriptor.getFromToMappings());
     descriptor.fromToMappings(fromToMappings);
@@ -205,11 +221,16 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return mapper.asType().getKind() == DECLARED;
   }
 
-  private static FromToMapping toFromToMapping(
-      final List<? extends TypeMirror> sourceTypeTargetType) {
+  private FromToMapping toFromToMapping(final Element mapper) {
+    final var sourceTypeTargetType = toTypeArguments(mapper);
+
     return new FromToMapping()
         .source(TypeName.get(sourceTypeTargetType.get(0)))
-        .target(TypeName.get(sourceTypeTargetType.get(1)));
+        .target(TypeName.get(sourceTypeTargetType.get(1)))
+        .adapterMethodName(
+            Optional.ofNullable(mapper.getAnnotation(AdapterMethodName.class))
+                .map(AdapterMethodName::value)
+                .orElse(null));
   }
 
   private List<? extends TypeMirror> toTypeArguments(final Element mapper) {

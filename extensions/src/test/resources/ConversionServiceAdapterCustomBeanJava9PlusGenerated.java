@@ -22,7 +22,7 @@ public class ConversionServiceAdapter {
     this.conversionService = conversionService;
   }
 
-  public CarDto mapCarToCarDto(final Car source) {
+  public CarDto toDto(final Car source) {
     return (CarDto) conversionService.convert(source, TypeDescriptor.valueOf(Car.class), TypeDescriptor.valueOf(CarDto.class));
   }
 
