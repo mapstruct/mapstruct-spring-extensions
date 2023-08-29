@@ -1,6 +1,7 @@
 dependencies {
     annotationProcessor project(":extensions")
     implementation projects.examples.model
+    implementation projects.annotations
 
     testImplementation projects.testExtensions
     testImplementation libs.assertj
@@ -10,5 +11,6 @@ dependencies {
     annotationProcessor libs.mapstruct.processor
     implementation libs.spring.context
     implementation libs.spring.core
+    testImplementation libs.mockito
     testImplementation libs.spring.test
 }

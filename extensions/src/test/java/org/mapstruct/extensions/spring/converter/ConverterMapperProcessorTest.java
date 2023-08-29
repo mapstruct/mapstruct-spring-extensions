@@ -1,25 +1,5 @@
 package org.mapstruct.extensions.spring.converter;
 
-import com.google.common.collect.ImmutableSet;
-import com.squareup.javapoet.*;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.Mapper;
-import org.mapstruct.extensions.spring.ExternalConversion;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.convert.converter.Converter;
-
-import javax.tools.*;
-import java.io.IOException;
-import java.io.Writer;
-import java.lang.ref.WeakReference;
-import java.time.Clock;
-import java.util.Locale;
-import java.util.Set;
-
 import static com.google.common.collect.Iterables.concat;
 import static java.nio.file.Files.createTempDirectory;
 import static java.util.Arrays.asList;
@@ -29,6 +9,24 @@ import static javax.tools.StandardLocation.CLASS_OUTPUT;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
 
+import com.google.common.collect.ImmutableSet;
+import com.squareup.javapoet.*;
+import java.io.IOException;
+import java.io.Writer;
+import java.lang.ref.WeakReference;
+import java.time.Clock;
+import java.util.Locale;
+import java.util.Set;
+import javax.tools.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.Mapper;
+import org.mapstruct.extensions.spring.ExternalConversion;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.convert.converter.Converter;
+
 @ExtendWith(MockitoExtension.class)
 class ConverterMapperProcessorTest {
   public static final ClassName CAR_CLASS_NAME = ClassName.get("test", "Car");
@@ -37,14 +35,18 @@ class ConverterMapperProcessorTest {
   @Spy
   private final ConversionServiceAdapterGenerator adapterGenerator =
       new ConversionServiceAdapterGenerator(Clock.systemUTC());
+
   @Spy
   private final ConverterScanGenerator converterScanGenerator =
-          new ConverterScanGenerator(Clock.systemUTC());
+      new ConverterScanGenerator(Clock.systemUTC());
+
   @Spy
   private final ConverterScansGenerator converterScansGenerator =
-          new ConverterScansGenerator(Clock.systemUTC());
+      new ConverterScansGenerator(Clock.systemUTC());
+
   @Spy
-  private final ConverterRegistrationConfigurationGenerator converterRegistrationConfigurationGenerator =
+  private final ConverterRegistrationConfigurationGenerator
+      converterRegistrationConfigurationGenerator =
           new ConverterRegistrationConfigurationGenerator(Clock.systemUTC());
 
   @InjectMocks private ConverterMapperProcessor processor;
@@ -287,7 +289,7 @@ class ConverterMapperProcessorTest {
     then(descriptor).isNotNull();
     then(descriptor.getFromToMappings())
         .hasSize(1)
-        .containsExactly(Pair.of(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME));
+        .containsExactly(new FromToMapping().source(CAR_CLASS_NAME).target(CAR_DTO_CLASS_NAME));
   }
 
   @Test
@@ -316,7 +318,9 @@ class ConverterMapperProcessorTest {
     then(descriptor.getFromToMappings())
         .hasSize(2)
         .containsExactlyInAnyOrder(
-            Pair.of(CAR_CLASS_NAME, CAR_DTO_CLASS_NAME),
-            Pair.of(ClassName.get(String.class), ClassName.get(Locale.class)));
+            new FromToMapping().source(CAR_CLASS_NAME).target(CAR_DTO_CLASS_NAME),
+            new FromToMapping()
+                .source(ClassName.get(String.class))
+                .target(ClassName.get(Locale.class)));
   }
 }
