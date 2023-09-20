@@ -1,24 +1,16 @@
 package org.mapstruct.extensions.spring.converter;
 
-import static com.google.common.collect.Iterables.concat;
-import static java.nio.file.Files.createTempDirectory;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.*;
-import static javax.tools.StandardLocation.CLASS_OUTPUT;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mockito.ArgumentMatchers.any;
 
-import com.google.common.collect.ImmutableSet;
 import com.squareup.javapoet.*;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.ref.WeakReference;
 import java.time.Clock;
 import java.util.Locale;
-import java.util.Set;
 import javax.tools.*;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.Mapper;
@@ -28,9 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.converter.Converter;
 
 @ExtendWith(MockitoExtension.class)
-class ConverterMapperProcessorTest {
-  public static final ClassName CAR_CLASS_NAME = ClassName.get("test", "Car");
-  public static final ClassName CAR_DTO_CLASS_NAME = ClassName.get("test", "CarDto");
+class ConverterMapperProcessorTest extends AbstractProcessorTest {
 
   @Spy
   private final ConversionServiceAdapterGenerator adapterGenerator =
@@ -53,97 +43,8 @@ class ConverterMapperProcessorTest {
 
   @Captor private ArgumentCaptor<ConversionServiceAdapterDescriptor> descriptorArgumentCaptor;
 
-  private static Set<JavaFileObject> commonCompilationUnits;
-  private static final String PACKAGE_NAME = "test";
-
-  private boolean compile(JavaFileObject... additionalCompilationUnits) throws IOException {
-    final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-
-    final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-    final StandardJavaFileManager fileManager =
-        compiler.getStandardFileManager(diagnostics, null, null);
-    fileManager.setLocation(CLASS_OUTPUT, singletonList(createTempDirectory("classes").toFile()));
-
-    final JavaCompiler.CompilationTask task =
-        compiler.getTask(
-            null,
-            fileManager,
-            diagnostics,
-            null,
-            null,
-            concat(commonCompilationUnits, asList(additionalCompilationUnits)));
-    task.setProcessors(singletonList(processor));
-
-    final boolean success = task.call();
-    diagnostics.getDiagnostics().forEach(System.err::println);
-    return success;
-  }
-
-  @BeforeAll
-  static void setupCommonSourceFiles() {
-    commonCompilationUnits =
-        ImmutableSet.of(
-            JavaFile.builder(PACKAGE_NAME, buildSimpleModelClassTypeSpec("Car"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder(PACKAGE_NAME, buildSimpleModelClassTypeSpec("CarDto"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder("javax.annotation", buildGeneratedAnnotationTypeSpec())
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder(
-                    "org.springframework.stereotype", buildSimpleAnnotationTypeSpec("Component"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject(),
-            JavaFile.builder(
-                    "org.springframework.context.annotation", buildSimpleAnnotationTypeSpec("Lazy"))
-                .skipJavaLangImports(true)
-                .build()
-                .toJavaFileObject());
-  }
-
-  private static TypeSpec buildSimpleAnnotationTypeSpec(final String annotationName) {
-    return TypeSpec.annotationBuilder(annotationName).addModifiers(PUBLIC).build();
-  }
-
-  private static TypeSpec buildGeneratedAnnotationTypeSpec() {
-    return TypeSpec.annotationBuilder("Generated")
-        .addModifiers(PUBLIC)
-        .addMethod(
-            MethodSpec.methodBuilder("value")
-                .returns(String.class)
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build())
-        .addMethod(
-            MethodSpec.methodBuilder("date")
-                .returns(String.class)
-                .addModifiers(PUBLIC, ABSTRACT)
-                .build())
-        .build();
-  }
-
-  private static TypeSpec buildSimpleModelClassTypeSpec(final String className) {
-    final FieldSpec makeField = FieldSpec.builder(String.class, "make", PRIVATE).build();
-    final ParameterSpec makeParameter = ParameterSpec.builder(String.class, "make", FINAL).build();
-    return TypeSpec.classBuilder(className)
-        .addModifiers(PUBLIC)
-        .addField(makeField)
-        .addMethod(
-            MethodSpec.methodBuilder("getMake")
-                .returns(String.class)
-                .addStatement("return $N", makeField)
-                .build())
-        .addMethod(
-            MethodSpec.methodBuilder("setMake")
-                .addParameter(makeParameter)
-                .addStatement("this.$N = $N", makeField, makeParameter)
-                .build())
-        .build();
+  private boolean compile(final JavaFileObject... additionalCompilationUnits) throws IOException {
+    return compile(processor, additionalCompilationUnits);
   }
 
   private static TypeSpec buildConfigClassWithExternalConversion(final String className) {

@@ -4,15 +4,14 @@ import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static javax.lang.model.element.Modifier.*;
-import static javax.tools.Diagnostic.Kind.WARNING;
+import static org.mapstruct.extensions.spring.converter.TypeNameUtils.rawType;
 
 import com.squareup.javapoet.*;
 import java.time.Clock;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class ConversionServiceAdapterGenerator extends Generator {
+public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
   private static final ClassName CONVERSION_SERVICE_CLASS_NAME =
       ClassName.get("org.springframework.core.convert", "ConversionService");
   private static final String CONVERSION_SERVICE_FIELD_NAME = "conversionService";
@@ -81,68 +80,6 @@ public class ConversionServiceAdapterGenerator extends Generator {
 
   private static AnnotationSpec buildLazyAnnotation() {
     return AnnotationSpec.builder(LAZY_ANNOTATION_CLASS_NAME).build();
-  }
-
-  private String collectionOfMethodName(final ParameterizedTypeName parameterizedTypeName) {
-    if (isCollectionWithGenericParameter(parameterizedTypeName)) {
-      return simpleName(parameterizedTypeName)
-          + "Of"
-          + collectionOfNameIfApplicable(parameterizedTypeName.typeArguments.iterator().next());
-    }
-
-    return simpleName(parameterizedTypeName);
-  }
-
-  private boolean isCollectionWithGenericParameter(
-      final ParameterizedTypeName parameterizedTypeName) {
-    return parameterizedTypeName.typeArguments != null
-        && !parameterizedTypeName.typeArguments.isEmpty()
-        && isCollection(parameterizedTypeName);
-  }
-
-  private boolean isCollection(final ParameterizedTypeName parameterizedTypeName) {
-    try {
-      return Collection.class.isAssignableFrom(
-          Class.forName(parameterizedTypeName.rawType.canonicalName()));
-    } catch (ClassNotFoundException e) {
-      getProcessingEnvironment()
-          .getMessager()
-          .printMessage(
-              WARNING,
-              "Caught ClassNotFoundException when trying to resolve parameterized type: "
-                  + e.getMessage());
-      return false;
-    }
-  }
-
-  private String collectionOfNameIfApplicable(final TypeName typeName) {
-    if (typeName instanceof ParameterizedTypeName) {
-      return collectionOfMethodName((ParameterizedTypeName) typeName);
-    }
-    return simpleName(typeName);
-  }
-
-  private static String simpleName(final TypeName typeName) {
-    final TypeName rawType = rawType(typeName);
-    if (rawType instanceof ArrayTypeName) {
-      return arraySimpleName((ArrayTypeName) rawType);
-    } else if (rawType instanceof ClassName) {
-      return ((ClassName) rawType).simpleName();
-    } else return String.valueOf(typeName);
-  }
-
-  private static String arraySimpleName(final ArrayTypeName arrayTypeName) {
-    return "ArrayOf"
-        + (arrayTypeName.componentType instanceof ArrayTypeName
-            ? arraySimpleName((ArrayTypeName) arrayTypeName.componentType)
-            : arrayTypeName.componentType);
-  }
-
-  private static TypeName rawType(final TypeName typeName) {
-    if (typeName instanceof ParameterizedTypeName) {
-      return ((ParameterizedTypeName) typeName).rawType;
-    }
-    return typeName;
   }
 
   private Iterable<MethodSpec> buildMappingMethods(
@@ -224,5 +161,4 @@ public class ConversionServiceAdapterGenerator extends Generator {
             CONVERSION_SERVICE_CLASS_NAME, CONVERSION_SERVICE_FIELD_NAME, PRIVATE, FINAL)
         .build();
   }
-
 }

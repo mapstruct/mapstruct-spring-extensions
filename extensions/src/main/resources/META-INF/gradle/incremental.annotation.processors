@@ -1,1 +1,2 @@
 org.mapstruct.extensions.spring.converter.ConverterMapperProcessor,aggregating
+org.mapstruct.extensions.spring.converter.DelegatingConverterProcessor.aggregating

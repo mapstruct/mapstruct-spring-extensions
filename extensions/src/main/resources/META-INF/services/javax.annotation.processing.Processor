@@ -1,1 +1,2 @@
 org.mapstruct.extensions.spring.converter.ConverterMapperProcessor
+org.mapstruct.extensions.spring.converter.DelegatingConverterProcessor

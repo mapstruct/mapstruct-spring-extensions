@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.mapstruct.extensions.spring.converter.ModelElementUtils.hasName;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
@@ -18,11 +19,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -35,7 +33,7 @@ import org.mapstruct.extensions.spring.SpringMapperConfig;
   ConverterMapperProcessor.MAPPER,
   ConverterMapperProcessor.SPRING_MAPPER_CONFIG
 })
-public class ConverterMapperProcessor extends AbstractProcessor {
+public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
   protected static final String MAPPER = "org.mapstruct.Mapper";
   protected static final String SPRING_MAPPER_CONFIG =
       "org.mapstruct.extensions.spring.SpringMapperConfig";
@@ -66,7 +64,11 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final ConverterScansGenerator converterScansGenerator,
       final ConverterRegistrationConfigurationGenerator
           converterRegistrationConfigurationGenerator) {
-    super();
+    super(
+        adapterGenerator,
+        converterScanGenerator,
+        converterScansGenerator,
+        converterRegistrationConfigurationGenerator);
     this.adapterGenerator = adapterGenerator;
     this.converterScanGenerator = converterScanGenerator;
     this.converterScansGenerator = converterScansGenerator;
@@ -74,25 +76,11 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   }
 
   @Override
-  public synchronized void init(final ProcessingEnvironment processingEnv) {
-    super.init(processingEnv);
-    adapterGenerator.init(processingEnv);
-    converterScanGenerator.init(processingEnv);
-    converterScansGenerator.init(processingEnv);
-    converterRegistrationConfigurationGenerator.init(processingEnv);
-  }
-
-  @Override
-  public SourceVersion getSupportedSourceVersion() {
-    return SourceVersion.latestSupported();
-  }
-
-  @Override
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     final ConversionServiceAdapterDescriptor descriptor = buildDescriptor(annotations, roundEnv);
     annotations.stream()
-        .filter(this::isMapperAnnotation)
+        .filter(ConverterMapperProcessor::isMapperAnnotation)
         .forEach(annotation -> processMapperAnnotation(roundEnv, descriptor, annotation));
     return false;
   }
@@ -190,7 +178,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .orElse(null);
   }
 
-  private boolean isMapperAnnotation(TypeElement annotation) {
+  private static boolean isMapperAnnotation(final TypeElement annotation) {
     return MAPPER.contentEquals(annotation.getQualifiedName());
   }
 
@@ -237,10 +225,6 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return ((DeclaredType) getConverterSupertype(mapper).orElseThrow()).getTypeArguments();
   }
 
-  private static boolean hasName(final Name name, final String comparisonName) {
-    return name.contentEquals(comparisonName);
-  }
-
   private void writeAdapterClassFile(final ConversionServiceAdapterDescriptor descriptor) {
     writeOutputFile(
         descriptor, this::openAdapterFile, adapterGenerator, descriptor::getAdapterClassName);
@@ -271,7 +255,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   private void writeOutputFile(
       final ConversionServiceAdapterDescriptor descriptor,
       final OpenFileFunction openFileFunction,
-      final Generator generator,
+      final AdapterRelatedGenerator generator,
       final Supplier<ClassName> outputFileClassNameSupplier) {
     try (final Writer outputWriter = openFileFunction.open(descriptor)) {
       generator.writeGeneratedCodeToOutput(descriptor, outputWriter);
@@ -304,10 +288,6 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   private Writer openAdapterFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
     return openFile(descriptor.getAdapterClassName());
-  }
-
-  private Writer openFile(final ClassName className) throws IOException {
-    return processingEnv.getFiler().createSourceFile(className.canonicalName()).openWriter();
   }
 
   private ClassName getAdapterClassName(

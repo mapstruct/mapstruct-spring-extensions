@@ -9,7 +9,7 @@ import java.lang.annotation.*;
 import java.time.Clock;
 import java.util.Optional;
 
-public class ConverterScanGenerator extends Generator {
+public class ConverterScanGenerator extends AdapterRelatedGenerator {
 
   private static final ClassName COMPONENT_SCAN_CLASS_NAME =
       ClassName.get(SPRING_CONTEXT_ANNOTATION_PACKAGE_NAME, "ComponentScan");

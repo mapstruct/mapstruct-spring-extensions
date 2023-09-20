@@ -22,7 +22,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
-abstract class AbstractConversionServiceBeanNameIndependentGeneratorTest extends GeneratorTest {
+abstract class AbstractConversionServiceBeanNameIndependentGeneratorTest extends AdapterRelatedGeneratorTest {
   @Mock private Elements elements;
 
   private boolean isAtLeastJava9;
@@ -32,15 +32,15 @@ abstract class AbstractConversionServiceBeanNameIndependentGeneratorTest extends
   private final String java9PlusGeneratedExpectedContentFileName;
   private final String java9PlusGeneratedNoDateExpectedContentFileName;
   private final String noGeneratedExpectedContentFileName;
-  private final Generator underTest;
+  private final AdapterRelatedGenerator underTest;
 
   protected AbstractConversionServiceBeanNameIndependentGeneratorTest(
-      final String java8GeneratedExpectedContentFilename,
-      final String java8GeneratedNoDateExpectedContentFileName,
-      final String java9PlusGeneratedExpectedContentFileName,
-      final String java9PlusGeneratedNoDateExpectedContentFileName,
-      final String noGeneratedExpectedContentFileName,
-      Generator underTest) {
+          final String java8GeneratedExpectedContentFilename,
+          final String java8GeneratedNoDateExpectedContentFileName,
+          final String java9PlusGeneratedExpectedContentFileName,
+          final String java9PlusGeneratedNoDateExpectedContentFileName,
+          final String noGeneratedExpectedContentFileName,
+          final AdapterRelatedGenerator underTest) {
     this.java8GeneratedExpectedContentFilename = java8GeneratedExpectedContentFilename;
     this.java8GeneratedNoDateExpectedContentFileName = java8GeneratedNoDateExpectedContentFileName;
     this.java9PlusGeneratedExpectedContentFileName = java9PlusGeneratedExpectedContentFileName;

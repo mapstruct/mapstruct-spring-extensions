@@ -15,7 +15,9 @@ include "examples:simple-springboot"
 include "examples:external-conversions"
 include "examples:arrays"
 include "examples:no-explicit-convert"
+include "examples:delegatingconverter"
 include "docs"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 
