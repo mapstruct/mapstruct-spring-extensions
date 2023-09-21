@@ -7,6 +7,7 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.tools.Diagnostic.Kind.ERROR;
+import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.mapstruct.extensions.spring.converter.ModelElementUtils.hasName;
 
@@ -19,6 +20,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.annotation.processing.FilerException;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.*;
@@ -31,9 +33,12 @@ import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 @SupportedAnnotationTypes({
   ConverterMapperProcessor.MAPPER,
-  ConverterMapperProcessor.SPRING_MAPPER_CONFIG
+  ConverterMapperProcessor.SPRING_MAPPER_CONFIG,
+  ConverterMapperProcessor.DELEGATING_CONVERTER
 })
 public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
+  protected static final String DELEGATING_CONVERTER =
+      "org.mapstruct.extensions.spring.DelegatingConverter";
   protected static final String MAPPER = "org.mapstruct.Mapper";
   protected static final String SPRING_MAPPER_CONFIG =
       "org.mapstruct.extensions.spring.SpringMapperConfig";
@@ -45,6 +50,7 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
   private final ConverterScansGenerator converterScansGenerator;
   private final ConverterRegistrationConfigurationGenerator
       converterRegistrationConfigurationGenerator;
+  private final DelegatingConverterGenerator delegatingConverterGenerator;
 
   public ConverterMapperProcessor() {
     this(Clock.systemUTC());
@@ -55,37 +61,82 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
         new ConversionServiceAdapterGenerator(clock),
         new ConverterScanGenerator(clock),
         new ConverterScansGenerator(clock),
-        new ConverterRegistrationConfigurationGenerator(clock));
+        new ConverterRegistrationConfigurationGenerator(clock),
+        new DelegatingConverterGenerator(clock));
   }
 
   ConverterMapperProcessor(
       final ConversionServiceAdapterGenerator adapterGenerator,
       final ConverterScanGenerator converterScanGenerator,
       final ConverterScansGenerator converterScansGenerator,
-      final ConverterRegistrationConfigurationGenerator
-          converterRegistrationConfigurationGenerator) {
+      final ConverterRegistrationConfigurationGenerator converterRegistrationConfigurationGenerator,
+      final DelegatingConverterGenerator delegatingConverterGenerator) {
     super(
         adapterGenerator,
         converterScanGenerator,
         converterScansGenerator,
-        converterRegistrationConfigurationGenerator);
+        converterRegistrationConfigurationGenerator,
+        delegatingConverterGenerator);
     this.adapterGenerator = adapterGenerator;
     this.converterScanGenerator = converterScanGenerator;
     this.converterScansGenerator = converterScansGenerator;
     this.converterRegistrationConfigurationGenerator = converterRegistrationConfigurationGenerator;
+    this.delegatingConverterGenerator = delegatingConverterGenerator;
   }
 
   @Override
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    final ConversionServiceAdapterDescriptor descriptor = buildDescriptor(annotations, roundEnv);
+    final var delegatingConverterDescriptors =
+        annotations.stream()
+            .filter(ConverterMapperProcessor::isDelegatingConverterAnnotation)
+            .map(roundEnv::getElementsAnnotatedWith)
+            .flatMap(Set::stream)
+            .map(ExecutableElement.class::cast)
+            .map(
+                annotatedMethod ->
+                    new DelegatingConverterDescriptor(annotatedMethod, processingEnv))
+            .collect(toList());
+    delegatingConverterDescriptors.forEach(this::writeDelegatingConverterFile);
+
+    final ConversionServiceAdapterDescriptor adapterDescriptor =
+        buildAdapterDescriptor(annotations, roundEnv);
     annotations.stream()
         .filter(ConverterMapperProcessor::isMapperAnnotation)
-        .forEach(annotation -> processMapperAnnotation(roundEnv, descriptor, annotation));
+        .forEach(
+            annotation ->
+                processMapperAnnotation(
+                    roundEnv, adapterDescriptor, delegatingConverterDescriptors, annotation));
     return false;
   }
 
-  private ConversionServiceAdapterDescriptor buildDescriptor(
+  private void writeDelegatingConverterFile(final DelegatingConverterDescriptor descriptor) {
+    try (final Writer outputWriter = openFile(descriptor.getConverterClassName())) {
+      delegatingConverterGenerator.writeGeneratedCodeToOutput(descriptor, outputWriter);
+    } catch (FilerException e) {
+      processingEnv
+              .getMessager()
+              .printMessage(
+                      WARNING,
+                      String.format(
+                              "Failed to open %s output file: %s",
+                              descriptor.getConverterClassName().simpleName(), e.getMessage()));
+    } catch (IOException e) {
+      processingEnv
+          .getMessager()
+          .printMessage(
+              ERROR,
+              String.format(
+                  "Error while opening %s output file: %s",
+                  descriptor.getConverterClassName().simpleName(), e.getMessage()));
+    }
+  }
+
+  private static boolean isDelegatingConverterAnnotation(final TypeElement annotation) {
+    return DELEGATING_CONVERTER.contentEquals(annotation.getQualifiedName());
+  }
+
+  private ConversionServiceAdapterDescriptor buildAdapterDescriptor(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return new ConversionServiceAdapterDescriptor()
         .adapterClassName(getAdapterClassName(annotations, roundEnv))
@@ -184,7 +235,8 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
 
   private void processMapperAnnotation(
       final RoundEnvironment roundEnv,
-      final ConversionServiceAdapterDescriptor descriptor,
+      final ConversionServiceAdapterDescriptor adapterDescriptor,
+      final List<DelegatingConverterDescriptor> delegatingConverterDescriptors,
       final TypeElement annotation) {
     final List<FromToMapping> fromToMappings =
         roundEnv.getElementsAnnotatedWith(annotation).stream()
@@ -192,12 +244,16 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
             .filter(this::hasConverterSupertype)
             .map(this::toFromToMapping)
             .collect(toCollection(ArrayList::new));
-    fromToMappings.addAll(descriptor.getFromToMappings());
-    descriptor.fromToMappings(fromToMappings);
-    writeAdapterClassFile(descriptor);
-    if (descriptor.hasNonDefaultConversionServiceBeanName()
-        && descriptor.isGenerateConverterScan()) {
-      writeConverterScanFiles(descriptor);
+    fromToMappings.addAll(adapterDescriptor.getFromToMappings());
+    fromToMappings.addAll(
+        delegatingConverterDescriptors.stream()
+            .map(DelegatingConverterDescriptor::getFromToMapping)
+            .collect(toList()));
+    adapterDescriptor.fromToMappings(fromToMappings);
+    writeAdapterClassFile(adapterDescriptor);
+    if (adapterDescriptor.hasNonDefaultConversionServiceBeanName()
+        && adapterDescriptor.isGenerateConverterScan()) {
+      writeConverterScanFiles(adapterDescriptor);
     }
   }
 
@@ -259,6 +315,14 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
       final Supplier<ClassName> outputFileClassNameSupplier) {
     try (final Writer outputWriter = openFileFunction.open(descriptor)) {
       generator.writeGeneratedCodeToOutput(descriptor, outputWriter);
+    } catch (FilerException e) {
+      processingEnv
+          .getMessager()
+          .printMessage(
+              WARNING,
+              String.format(
+                  "Failed to open %s output file: %s",
+                  outputFileClassNameSupplier.get().simpleName(), e.getMessage()));
     } catch (IOException e) {
       processingEnv
           .getMessager()
