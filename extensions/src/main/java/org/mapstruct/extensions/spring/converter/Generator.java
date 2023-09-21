@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.annotation.processing.ProcessingEnvironment;
 
-abstract class Generator {
+public abstract class Generator {
   protected static final String GENERATED_ANNOTATION_CLASS_NAME_STRING = "Generated";
   protected static final String PRE_JAVA_9_ANNOTATION_GENERATED_PACKAGE = "javax.annotation";
   protected static final String JAVA_9_PLUS_ANNOTATION_GENERATED_PACKAGE =

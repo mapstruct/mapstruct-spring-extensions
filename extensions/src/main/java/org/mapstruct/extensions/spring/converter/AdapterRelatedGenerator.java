@@ -5,7 +5,7 @@ import com.squareup.javapoet.TypeSpec;
 import java.io.Writer;
 import java.time.Clock;
 
-abstract class AdapterRelatedGenerator extends Generator {
+public abstract class AdapterRelatedGenerator extends Generator {
     protected AdapterRelatedGenerator(Clock clock) {
         super(clock);
     }

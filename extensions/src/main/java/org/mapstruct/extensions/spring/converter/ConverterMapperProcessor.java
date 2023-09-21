@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.tools.Diagnostic.Kind.ERROR;
-import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static org.mapstruct.extensions.spring.converter.ModelElementUtils.hasName;
 
@@ -20,7 +19,6 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.annotation.processing.FilerException;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.*;
@@ -111,16 +109,8 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
   }
 
   private void writeDelegatingConverterFile(final DelegatingConverterDescriptor descriptor) {
-    try (final Writer outputWriter = openFile(descriptor.getConverterClassName())) {
+    try (final Writer outputWriter = openResourceFile(descriptor.getConverterClassName())) {
       delegatingConverterGenerator.writeGeneratedCodeToOutput(descriptor, outputWriter);
-    } catch (FilerException e) {
-      processingEnv
-              .getMessager()
-              .printMessage(
-                      WARNING,
-                      String.format(
-                              "Failed to open %s output file: %s",
-                              descriptor.getConverterClassName().simpleName(), e.getMessage()));
     } catch (IOException e) {
       processingEnv
           .getMessager()
@@ -315,14 +305,6 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
       final Supplier<ClassName> outputFileClassNameSupplier) {
     try (final Writer outputWriter = openFileFunction.open(descriptor)) {
       generator.writeGeneratedCodeToOutput(descriptor, outputWriter);
-    } catch (FilerException e) {
-      processingEnv
-          .getMessager()
-          .printMessage(
-              WARNING,
-              String.format(
-                  "Failed to open %s output file: %s",
-                  outputFileClassNameSupplier.get().simpleName(), e.getMessage()));
     } catch (IOException e) {
       processingEnv
           .getMessager()
@@ -336,22 +318,22 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
 
   private Writer openConverterRegistrationConfigurationFile(
       final ConversionServiceAdapterDescriptor descriptor) throws IOException {
-    return openFile(descriptor.getConverterRegistrationConfigurationClassName());
+    return openSourceFile(descriptor.getConverterRegistrationConfigurationClassName());
   }
 
   private Writer openConverterScanFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return openFile(descriptor.getConverterScanClassName());
+    return openSourceFile(descriptor.getConverterScanClassName());
   }
 
   private Writer openConverterScansFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return openFile(descriptor.getConverterScansClassName());
+    return openSourceFile(descriptor.getConverterScansClassName());
   }
 
   private Writer openAdapterFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return openFile(descriptor.getAdapterClassName());
+    return openSourceFile(descriptor.getAdapterClassName());
   }
 
   private ClassName getAdapterClassName(
