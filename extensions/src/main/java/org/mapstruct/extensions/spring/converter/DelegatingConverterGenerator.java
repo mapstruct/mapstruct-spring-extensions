@@ -7,7 +7,6 @@ import com.squareup.javapoet.*;
 import java.io.Writer;
 import java.time.Clock;
 import java.util.Optional;
-import org.mapstruct.Mapper;
 
 public class DelegatingConverterGenerator extends Generator {
   public DelegatingConverterGenerator(final Clock clock) {
@@ -18,26 +17,43 @@ public class DelegatingConverterGenerator extends Generator {
       final DelegatingConverterDescriptor descriptor, final Writer outputWriter) {
     writeGeneratedCodeToOutput(
         () -> descriptor.getOriginalMapperClassName().packageName(),
-        () -> createDelegatingMapperTypeSpec(descriptor),
+        () -> createDelegatingConverterTypeSpec(descriptor),
         outputWriter);
   }
 
-  private TypeSpec createDelegatingMapperTypeSpec(final DelegatingConverterDescriptor descriptor) {
-    final var mapperTypeSpecBuilder =
+  private TypeSpec createDelegatingConverterTypeSpec(
+      final DelegatingConverterDescriptor descriptor) {
+    final var converterTypeSpecBuilder =
         TypeSpec.classBuilder(descriptor.getConverterClassName())
-            .addModifiers(PUBLIC, ABSTRACT)
+            .addModifiers(PUBLIC)
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     CONVERTER_CLASSNAME,
                     descriptor.getFromToMapping().getSource(),
                     descriptor.getFromToMapping().getTarget()));
     Optional.ofNullable(buildGeneratedAnnotationSpec())
-        .ifPresent(mapperTypeSpecBuilder::addAnnotation);
-    final var injectedMapperField = buildInjectedMapperField(descriptor);
-    return mapperTypeSpecBuilder
-        .addAnnotation(buildMapperAnnotation(descriptor))
+        .ifPresent(converterTypeSpecBuilder::addAnnotation);
+    final var injectedMapperField = buildMapperField(descriptor);
+    return converterTypeSpecBuilder
+        .addAnnotation(ClassName.get("org.springframework.stereotype", "Component"))
         .addField(injectedMapperField)
+        .addMethod(buildConstructor(injectedMapperField))
         .addMethod(buildConvertMethod(descriptor, injectedMapperField))
+        .build();
+  }
+
+  private static MethodSpec buildConstructor(final FieldSpec injectedMapperField) {
+    final var constructorParameter = buildConstructorParameter(injectedMapperField);
+    return MethodSpec.constructorBuilder()
+        .addModifiers(PUBLIC)
+        .addParameter(constructorParameter)
+        .addStatement("this.$N = $N", injectedMapperField, constructorParameter)
+        .build();
+  }
+
+  private static ParameterSpec buildConstructorParameter(final FieldSpec injectedMapperField) {
+    return ParameterSpec.builder(injectedMapperField.type, injectedMapperField.name, FINAL)
+        .addAnnotation(ClassName.get("org.springframework.beans.factory.annotation", "Autowired"))
         .build();
   }
 
@@ -63,22 +79,8 @@ public class DelegatingConverterGenerator extends Generator {
         .build();
   }
 
-  private static FieldSpec buildInjectedMapperField(
-      final DelegatingConverterDescriptor descriptor) {
+  private static FieldSpec buildMapperField(final DelegatingConverterDescriptor descriptor) {
     return FieldSpec.builder(descriptor.getOriginalMapperClassName(), "delegateMapper", PRIVATE)
-        .addAnnotation(ClassName.get("org.springframework.beans.factory.annotation", "Autowired"))
         .build();
-  }
-
-  private static AnnotationSpec buildMapperAnnotation(
-      final DelegatingConverterDescriptor descriptor) {
-    final var builder = AnnotationSpec.builder(Mapper.class);
-    descriptor
-        .getComponentModel()
-        .ifPresent(componentModel -> builder.addMember("componentModel", "$S", componentModel));
-    descriptor
-        .getConfigTypeName()
-        .ifPresent(configTypeName -> builder.addMember("config", "$T.class", configTypeName));
-    return builder.build();
   }
 }

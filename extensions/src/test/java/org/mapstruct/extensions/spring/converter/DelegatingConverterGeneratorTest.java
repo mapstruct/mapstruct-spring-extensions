@@ -14,7 +14,6 @@ import com.squareup.javapoet.ClassName;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Map;
-import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
@@ -149,8 +148,6 @@ class DelegatingConverterGeneratorTest extends GeneratorTest {
     given(descriptor.getOriginalMapperClassName())
         .willReturn(ClassName.get(MAPPER_PACKAGE_NAME, "CarMapper"));
     given(descriptor.getOriginalMapperMethodName()).willReturn("convertInverse");
-    given(descriptor.getConfigTypeName())
-        .willReturn(Optional.of(ClassName.get(MAPPER_PACKAGE_NAME, "MapperSpringConfig")));
     final var outputWriter = new StringWriter();
 
     underTest.writeGeneratedCodeToOutput(descriptor, outputWriter);
