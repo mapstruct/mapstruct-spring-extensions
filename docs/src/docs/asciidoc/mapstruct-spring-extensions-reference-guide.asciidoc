@@ -27,3 +27,5 @@ include::chapter-3-mapper-as-converter.asciidoc[]
 include::chapter-4-external-conversions.asciidoc[]
 
 include::chapter-5-test-extensions.asciidoc[]
+
+include::chapter-6-delegating-converters.asciidoc[]

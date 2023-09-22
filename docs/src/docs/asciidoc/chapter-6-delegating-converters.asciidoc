@@ -1,0 +1,62 @@
+[[delegatingConverters]]
+== Delegating Converters
+
+Applying MapStruct's https://mapstruct.org/documentation/stable/reference/html/#inverse-mappings[inverse mappings] requires a second mapping method inside a `@Mapper`-annotated interface or abstract class.
+Since this is not how Spring sees `Converter` s, this inverted mapping method will be "invisible" to the `ConversionService`.
+Adding the annotation `@DelegatingConverter` to the same method will lead to the generation of a separate class which implements `Converter` and does nothing more than call the annotated method in its own `convert`.
+This class will have a method counterpart in the generated Adapter just like the ones annotated with `@Mapper`.
+
+Take this `Converter` for example:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@Mapper(config = MapperSpringConfig.class)
+public interface CarMapper extends Converter<Car, CarDto> {
+    @Mapping(target = "seats", source = "seatConfiguration")
+    CarDto convert(Car car);
+
+    @InheritInverseConfiguration
+    @DelegatingConverter
+    Car invertConvert(CarDto carDto);
+}
+----
+====
+
+Notice the combination of `@InheritInverseConfiguration` and `@DelegatingConverter` on the `invertConvert` method.
+The `@DelegatingConverter` will lead to a class like this:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@Component
+public class CarDtoToCarConverter implements Converter<CarDto, Car> {
+  private CarMapper delegateMapper;
+
+  public CarDtoToCarConverter(@Autowired final CarMapper delegateMapper) {
+    this.delegateMapper = delegateMapper;
+  }
+
+  @Override
+  public Car convert(final CarDto source) {
+    return delegateMapper.invertConvert(source);
+  }
+}
+----
+====
+
+The generated Adapter will contain a method counterpart like this:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+  public Car mapCarDtoToCar(final CarDto source) {
+    return (Car) conversionService.convert(source, TypeDescriptor.valueOf(CarDto.class), TypeDescriptor.valueOf(Car.class));
+  }
+----
+====
+
+Please note: The behaviour of `@DelegatingConverter` is _not_ tied to `@InheritInverseConfiguration`; however, this is the only use case we are aware of where it provides meaningful value.
