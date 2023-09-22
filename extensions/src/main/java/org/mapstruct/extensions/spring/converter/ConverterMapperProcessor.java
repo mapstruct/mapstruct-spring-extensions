@@ -109,7 +109,7 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
   }
 
   private void writeDelegatingConverterFile(final DelegatingConverterDescriptor descriptor) {
-    try (final Writer outputWriter = openResourceFile(descriptor.getConverterClassName())) {
+    try (final Writer outputWriter = openSourceFile(descriptor.getConverterClassName())) {
       delegatingConverterGenerator.writeGeneratedCodeToOutput(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv

@@ -3,6 +3,7 @@ dependencies {
     implementation projects.examples.model
     implementation projects.annotations
 
+    testImplementation projects.testExtensions
     testImplementation libs.assertj
     testImplementation libs.bundles.junit.jupiter
     implementation libs.mapstruct.core

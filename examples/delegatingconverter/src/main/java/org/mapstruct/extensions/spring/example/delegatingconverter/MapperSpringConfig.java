@@ -5,4 +5,4 @@ import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 @MapperConfig(componentModel = "spring", uses = ConversionServiceAdapter.class)
 @SpringMapperConfig
-public class MapperSpringConfig {}
+public interface MapperSpringConfig {}
