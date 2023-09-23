@@ -6,10 +6,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.time.format.DateTimeFormatter.ISO_INSTANT;
 import static javax.lang.model.SourceVersion.RELEASE_8;
 
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
@@ -19,20 +16,23 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import javax.annotation.processing.ProcessingEnvironment;
 
-abstract class Generator {
+public abstract class Generator {
   protected static final String GENERATED_ANNOTATION_CLASS_NAME_STRING = "Generated";
   protected static final String PRE_JAVA_9_ANNOTATION_GENERATED_PACKAGE = "javax.annotation";
   protected static final String JAVA_9_PLUS_ANNOTATION_GENERATED_PACKAGE =
       "javax.annotation.processing";
-    protected static final AnnotationSpec TARGET_TYPE_ANNOTATION_SPEC =
-        AnnotationSpec.builder(Target.class).addMember("value", "$L", TYPE).build();
-    protected static final AnnotationSpec RETENTION_RUNTIME_ANNOTATION_SPEC =
-        AnnotationSpec.builder(Retention.class).addMember("value", "$L", RUNTIME).build();
-    protected static final String SPRING_CONTEXT_ANNOTATION_PACKAGE_NAME =
-        "org.springframework.context.annotation";
-    private static final String PRE_JAVA_9_ANNOTATION_GENERATED =
+  protected static final AnnotationSpec TARGET_TYPE_ANNOTATION_SPEC =
+      AnnotationSpec.builder(Target.class).addMember("value", "$L", TYPE).build();
+  protected static final AnnotationSpec RETENTION_RUNTIME_ANNOTATION_SPEC =
+      AnnotationSpec.builder(Retention.class).addMember("value", "$L", RUNTIME).build();
+  protected static final String SPRING_CONTEXT_ANNOTATION_PACKAGE_NAME =
+      "org.springframework.context.annotation";
+  protected static final ClassName CONVERTER_CLASSNAME =
+      ClassName.get("org.springframework.core.convert.converter", "Converter");
+  private static final String PRE_JAVA_9_ANNOTATION_GENERATED =
       String.format(
           "%s.%s", PRE_JAVA_9_ANNOTATION_GENERATED_PACKAGE, GENERATED_ANNOTATION_CLASS_NAME_STRING);
   private static final String JAVA_9_PLUS_ANNOTATION_GENERATED =
@@ -58,7 +58,7 @@ abstract class Generator {
     return processingEnvironment.get();
   }
 
-  public void init(final ProcessingEnvironment processingEnv) {
+  public final void init(final ProcessingEnvironment processingEnv) {
     if (!this.processingEnvironment.compareAndSet(null, processingEnv)) {
       throw new IllegalStateException("ProcessingEnvironment already set.");
     }
@@ -115,13 +115,14 @@ abstract class Generator {
   protected JavaFile.Builder modifyDefaultFileBuilder(final JavaFile.Builder javaFileBuilder) {
     return javaFileBuilder;
   }
-  
-  public final void writeGeneratedCodeToOutput(
-      final ConversionServiceAdapterDescriptor descriptor, final Writer out) {
+
+  protected final void writeGeneratedCodeToOutput(
+      final Supplier<String> packageNameSupplier,
+      final Supplier<TypeSpec> mainTypeSpecSupplier,
+      final Writer out) {
     try {
       final var javaFileBuilder =
-          JavaFile.builder(
-                  descriptor.getAdapterClassName().packageName(), createMainTypeSpec(descriptor))
+          JavaFile.builder(packageNameSupplier.get(), mainTypeSpecSupplier.get())
               .skipJavaLangImports(true);
       modifyDefaultFileBuilder(javaFileBuilder).build().writeTo(out);
     } catch (IOException e) {
@@ -129,5 +130,13 @@ abstract class Generator {
     }
   }
 
-  protected abstract TypeSpec createMainTypeSpec(ConversionServiceAdapterDescriptor descriptor);
+  protected final boolean isCollectionWithGenericParameter(
+      final ParameterizedTypeName parameterizedTypeName) {
+    return TypeNameUtils.isCollectionWithGenericParameter(
+        getProcessingEnvironment(), parameterizedTypeName);
+  }
+
+  protected final String collectionOfNameIfApplicable(final TypeName typeName) {
+    return TypeNameUtils.collectionOfNameIfApplicable(getProcessingEnvironment(), typeName);
+  }
 }

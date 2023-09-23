@@ -21,7 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 @ExtendWith(MockitoExtension.class)
-class ConverterRegistrationConfigurationGeneratorTest extends GeneratorTest {
+class ConverterRegistrationConfigurationGeneratorTest extends AdapterRelatedGeneratorTest {
   @Mock private Elements elements;
 
   private boolean isAtLeastJava9;

@@ -7,7 +7,7 @@ import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
-public class ConverterRegistrationConfigurationGenerator extends Generator {
+public class ConverterRegistrationConfigurationGenerator extends AdapterRelatedGenerator {
 
   private static final ClassName CONFIGURABLE_CONVERSION_SERVICE_CLASS_NAME =
       ClassName.get("org.springframework.core.convert.support", "ConfigurableConversionService");
@@ -15,7 +15,7 @@ public class ConverterRegistrationConfigurationGenerator extends Generator {
       ParameterizedTypeName.get(
           ClassName.get(List.class),
           ParameterizedTypeName.get(
-              ClassName.get("org.springframework.core.convert.converter", "Converter"),
+              CONVERTER_CLASSNAME,
               WildcardTypeName.subtypeOf(Object.class),
               WildcardTypeName.subtypeOf(Object.class)));
   private static final String CONVERTERS_FIELD_NAME = "converters";
