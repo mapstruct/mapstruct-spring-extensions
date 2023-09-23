@@ -5,13 +5,13 @@ dependencies {
     implementation projects.annotations
     implementation libs.javapoet
     implementation libs.commons.lang3
-    implementation libs.mapstruct.core
 
     testImplementation libs.assertj
     testImplementation libs.bundles.junit.jupiter
     testImplementation libs.commons.io
     testImplementation libs.dummymaker
     testImplementation libs.guava
+    testImplementation libs.mapstruct.core
     testImplementation libs.mockito
     testImplementation libs.spring.core
 }
