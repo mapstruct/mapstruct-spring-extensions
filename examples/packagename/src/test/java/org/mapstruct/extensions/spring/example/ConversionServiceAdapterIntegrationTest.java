@@ -1,29 +1,24 @@
 package org.mapstruct.extensions.spring.example;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.extensions.spring.example.packagename.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.convert.support.ConfigurableConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.mapstruct.extensions.spring.example.CarType.OTHER;
 import static org.mapstruct.extensions.spring.example.SeatMaterial.LEATHER;
 import static org.mapstruct.extensions.spring.example.WheelPosition.RIGHT_FRONT;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.extensions.spring.example.adapter.ConversionServiceAdapter;
+import org.mapstruct.extensions.spring.example.packagename.*;
+import org.mapstruct.extensions.spring.test.ConverterScan;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(
-    classes = {ConversionServiceAdapterIntegrationTest.AdditionalBeanConfiguration.class})
 public class ConversionServiceAdapterIntegrationTest {
   private static final String TEST_MAKE = "Volvo";
   private static final CarType TEST_CAR_TYPE = OTHER;
@@ -32,38 +27,24 @@ public class ConversionServiceAdapterIntegrationTest {
   private static final int TEST_DIAMETER = 20;
   private static final WheelPosition TEST_WHEEL_POSITION = RIGHT_FRONT;
 
-  @Autowired private CarMapper carMapper;
-  @Autowired private SeatConfigurationMapper seatConfigurationMapper;
-  @Autowired private WheelMapper wheelMapper;
-  @Autowired private WheelsMapper wheelsMapper;
-  @Autowired private WheelsDtoListMapper wheelsDtoListMapper;
-  @Autowired private ConfigurableConversionService conversionService;
+  @Autowired private ConversionService conversionService;
 
-  @ComponentScan("org.mapstruct.extensions.spring")
-  @Component
-  static class AdditionalBeanConfiguration {
-    @Bean
-    ConfigurableConversionService getConversionService() {
-      return new DefaultConversionService();
-    }
-  }
-
-  @BeforeEach
-  void addMappersToConversionService() {
-    conversionService.addConverter(carMapper);
-    conversionService.addConverter(seatConfigurationMapper);
-    conversionService.addConverter(wheelMapper);
-    conversionService.addConverter(wheelsMapper);
-    conversionService.addConverter(wheelsDtoListMapper);
-  }
+  @Configuration
+  @ConverterScan(basePackageClasses = {MapperSpringConfig.class, ConversionServiceAdapter.class})
+  static class ScanConfiguration{}
 
   @Test
   void shouldKnowAllMappers() {
     then(conversionService.canConvert(Car.class, CarDto.class)).isTrue();
-    then(conversionService.canConvert(SeatConfiguration.class, SeatConfigurationDto.class)).isTrue();
+    then(conversionService.canConvert(SeatConfiguration.class, SeatConfigurationDto.class))
+        .isTrue();
     then(conversionService.canConvert(Wheel.class, WheelDto.class)).isTrue();
     then(conversionService.canConvert(Wheels.class, List.class)).isTrue();
     then(conversionService.canConvert(List.class, Wheels.class)).isTrue();
+    then(conversionService.canConvert(
+            TypeDescriptor.collection(List.class, TypeDescriptor.valueOf(WheelDto.class)),
+            TypeDescriptor.valueOf((Wheels.class))))
+        .isTrue();
   }
 
   @Test

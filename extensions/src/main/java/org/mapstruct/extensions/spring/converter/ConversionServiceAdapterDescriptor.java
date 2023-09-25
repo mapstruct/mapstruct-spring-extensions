@@ -1,38 +1,21 @@
 package org.mapstruct.extensions.spring.converter;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.TypeName;
-import org.apache.commons.lang3.tuple.Pair;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-import javax.lang.model.util.Elements;
+import com.squareup.javapoet.ClassName;
 import java.util.List;
 
 public class ConversionServiceAdapterDescriptor {
   private ClassName adapterClassName;
   private String conversionServiceBeanName;
-  private List<Pair<TypeName, TypeName>> fromToMappings;
+  private List<FromToMapping> fromToMappings;
   private boolean lazyAnnotatedConversionServiceBean;
 
-  public Elements getElementUtils() {
-    return elementUtils;
-  }
+  private boolean generateConverterScan;
 
-  public ConversionServiceAdapterDescriptor elementUtils(Elements elementUtils) {
-    this.elementUtils = elementUtils;
-    return this;
+  boolean hasNonDefaultConversionServiceBeanName() {
+    return isNotEmpty(getConversionServiceBeanName());
   }
-
-  private Elements elementUtils;
-  public boolean isSourceVersionAtLeast9() {
-    return sourceVersionAtLeast9;
-  }
-
-  public ConversionServiceAdapterDescriptor sourceVersionAtLeast9(boolean sourceVersionAtLeast9) {
-    this.sourceVersionAtLeast9 = sourceVersionAtLeast9;
-    return this;
-  }
-
-  private boolean sourceVersionAtLeast9;
 
   public ClassName getAdapterClassName() {
     return adapterClassName;
@@ -53,12 +36,12 @@ public class ConversionServiceAdapterDescriptor {
     return this;
   }
 
-  public List<Pair<TypeName, TypeName>> getFromToMappings() {
+  public List<FromToMapping> getFromToMappings() {
     return fromToMappings;
   }
 
   public ConversionServiceAdapterDescriptor fromToMappings(
-      final List<Pair<TypeName, TypeName>> fromToMappings) {
+      final List<FromToMapping> fromToMappings) {
     this.fromToMappings = fromToMappings;
     return this;
   }
@@ -71,5 +54,27 @@ public class ConversionServiceAdapterDescriptor {
       final boolean lazyAnnotatedConversionServiceBean) {
     this.lazyAnnotatedConversionServiceBean = lazyAnnotatedConversionServiceBean;
     return this;
+  }
+
+
+  public boolean isGenerateConverterScan() {
+    return generateConverterScan;
+  }
+
+  public ConversionServiceAdapterDescriptor generateConverterScan(final boolean generateConverterScan) {
+    this.generateConverterScan = generateConverterScan;
+    return this;
+  }
+
+  public ClassName getConverterScanClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterScan");
+  }
+
+  public ClassName getConverterScansClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterScans");
+  }
+
+  public ClassName getConverterRegistrationConfigurationClassName() {
+    return ClassName.get(getAdapterClassName().packageName(), "ConverterRegistrationConfiguration");
   }
 }

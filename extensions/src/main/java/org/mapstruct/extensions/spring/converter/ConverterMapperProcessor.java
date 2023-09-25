@@ -1,40 +1,42 @@
 package org.mapstruct.extensions.spring.converter;
 
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static javax.lang.model.type.TypeKind.DECLARED;
+import static javax.tools.Diagnostic.Kind.ERROR;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.mapstruct.extensions.spring.converter.ModelElementUtils.hasName;
+
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.mapstruct.extensions.spring.SpringMapperConfig;
-
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.Clock;
 import java.util.*;
 import java.util.Map.Entry;
-
-import static java.lang.Boolean.TRUE;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toList;
-import static javax.lang.model.SourceVersion.RELEASE_8;
-import static javax.lang.model.element.ElementKind.METHOD;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.type.TypeKind.DECLARED;
-import static javax.tools.Diagnostic.Kind.ERROR;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.*;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.mapstruct.extensions.spring.AdapterMethodName;
+import org.mapstruct.extensions.spring.SpringMapperConfig;
 
 @SupportedAnnotationTypes({
   ConverterMapperProcessor.MAPPER,
-  ConverterMapperProcessor.SPRING_MAPPER_CONFIG
+  ConverterMapperProcessor.SPRING_MAPPER_CONFIG,
+  ConverterMapperProcessor.DELEGATING_CONVERTER
 })
-public class ConverterMapperProcessor extends AbstractProcessor {
+public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
+  protected static final String DELEGATING_CONVERTER =
+      "org.mapstruct.extensions.spring.DelegatingConverter";
   protected static final String MAPPER = "org.mapstruct.Mapper";
   protected static final String SPRING_MAPPER_CONFIG =
       "org.mapstruct.extensions.spring.SpringMapperConfig";
@@ -42,72 +44,128 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       "org.springframework.core.convert.converter.Converter";
 
   private final ConversionServiceAdapterGenerator adapterGenerator;
+  private final ConverterScanGenerator converterScanGenerator;
+  private final ConverterScansGenerator converterScansGenerator;
+  private final ConverterRegistrationConfigurationGenerator
+      converterRegistrationConfigurationGenerator;
+  private final DelegatingConverterGenerator delegatingConverterGenerator;
 
   public ConverterMapperProcessor() {
-    this(new ConversionServiceAdapterGenerator(Clock.systemUTC()));
+    this(Clock.systemUTC());
   }
 
-  ConverterMapperProcessor(final ConversionServiceAdapterGenerator adapterGenerator) {
-    super();
+  ConverterMapperProcessor(final Clock clock) {
+    this(
+        new ConversionServiceAdapterGenerator(clock),
+        new ConverterScanGenerator(clock),
+        new ConverterScansGenerator(clock),
+        new ConverterRegistrationConfigurationGenerator(clock),
+        new DelegatingConverterGenerator(clock));
+  }
+
+  ConverterMapperProcessor(
+      final ConversionServiceAdapterGenerator adapterGenerator,
+      final ConverterScanGenerator converterScanGenerator,
+      final ConverterScansGenerator converterScansGenerator,
+      final ConverterRegistrationConfigurationGenerator converterRegistrationConfigurationGenerator,
+      final DelegatingConverterGenerator delegatingConverterGenerator) {
+    super(
+        adapterGenerator,
+        converterScanGenerator,
+        converterScansGenerator,
+        converterRegistrationConfigurationGenerator,
+        delegatingConverterGenerator);
     this.adapterGenerator = adapterGenerator;
-  }
-
-  @Override
-  public SourceVersion getSupportedSourceVersion() {
-    return SourceVersion.latestSupported();
+    this.converterScanGenerator = converterScanGenerator;
+    this.converterScansGenerator = converterScansGenerator;
+    this.converterRegistrationConfigurationGenerator = converterRegistrationConfigurationGenerator;
+    this.delegatingConverterGenerator = delegatingConverterGenerator;
   }
 
   @Override
   public boolean process(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    final ConversionServiceAdapterDescriptor descriptor = buildDescriptor(annotations, roundEnv);
+    final var delegatingConverterDescriptors =
+        annotations.stream()
+            .filter(ConverterMapperProcessor::isDelegatingConverterAnnotation)
+            .map(roundEnv::getElementsAnnotatedWith)
+            .flatMap(Set::stream)
+            .map(ExecutableElement.class::cast)
+            .map(
+                annotatedMethod ->
+                    new DelegatingConverterDescriptor(annotatedMethod, processingEnv))
+            .collect(toList());
+    delegatingConverterDescriptors.forEach(this::writeDelegatingConverterFile);
+
+    final ConversionServiceAdapterDescriptor adapterDescriptor =
+        buildAdapterDescriptor(annotations, roundEnv);
     annotations.stream()
-        .filter(this::isMapperAnnotation)
-        .forEach(annotation -> processMapperAnnotation(roundEnv, descriptor, annotation));
+        .filter(ConverterMapperProcessor::isMapperAnnotation)
+        .forEach(
+            annotation ->
+                processMapperAnnotation(
+                    roundEnv, adapterDescriptor, delegatingConverterDescriptors, annotation));
     return false;
   }
 
-  private ConversionServiceAdapterDescriptor buildDescriptor(
+  private void writeDelegatingConverterFile(final DelegatingConverterDescriptor descriptor) {
+    try (final Writer outputWriter = openSourceFile(descriptor.getConverterClassName())) {
+      delegatingConverterGenerator.writeGeneratedCodeToOutput(descriptor, outputWriter);
+    } catch (IOException e) {
+      processingEnv
+          .getMessager()
+          .printMessage(
+              ERROR,
+              String.format(
+                  "Error while opening %s output file: %s",
+                  descriptor.getConverterClassName().simpleName(), e.getMessage()));
+    }
+  }
+
+  private static boolean isDelegatingConverterAnnotation(final TypeElement annotation) {
+    return DELEGATING_CONVERTER.contentEquals(annotation.getQualifiedName());
+  }
+
+  private ConversionServiceAdapterDescriptor buildAdapterDescriptor(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return new ConversionServiceAdapterDescriptor()
         .adapterClassName(getAdapterClassName(annotations, roundEnv))
-        .conversionServiceBeanName(getConversionServiceName(annotations, roundEnv))
+        .conversionServiceBeanName(getConversionServiceBeanName(annotations, roundEnv))
+        .generateConverterScan(getGenerateConverterScan(annotations, roundEnv))
         .lazyAnnotatedConversionServiceBean(
             getLazyAnnotatedConversionServiceBean(annotations, roundEnv))
-        .fromToMappings(getExternalConversionMappings(annotations, roundEnv))
-        .elementUtils(processingEnv.getElementUtils())
-        .sourceVersionAtLeast9(processingEnv.getSourceVersion().compareTo(RELEASE_8) > 0);
+        .fromToMappings(getExternalConversionMappings(annotations, roundEnv));
   }
 
-  private List<Pair<TypeName, TypeName>> getExternalConversionMappings(
+  private List<FromToMapping> getExternalConversionMappings(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    final Optional<List<Pair<TypeName, TypeName>>> pairs =
-        annotations.stream()
-            .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
-            .findFirst()
-            .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
-            .flatMap(this::toSpringMapperConfigMirror)
-            .map(AnnotationMirror::getElementValues)
-            .flatMap(this::extractExternalConversions)
-            .map(Entry::getValue)
-            .map(AnnotationValue::getValue)
-            .map(List.class::cast)
-            .map(this::toSourceTargetTypeNamePairs);
-    return pairs.orElse(emptyList());
+    return annotations.stream()
+        .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
+        .findFirst()
+        .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
+        .flatMap(this::toSpringMapperConfigMirror)
+        .map(AnnotationMirror::getElementValues)
+        .flatMap(this::extractExternalConversions)
+        .map(Entry::getValue)
+        .map(AnnotationValue::getValue)
+        .map(List.class::cast)
+        .map(this::toFromToMappings)
+        .orElse(emptyList());
   }
 
-  private List<Pair<TypeName, TypeName>> toSourceTargetTypeNamePairs(
-      final List<? extends AnnotationMirror> list) {
+  private List<FromToMapping> toFromToMappings(final List<? extends AnnotationMirror> list) {
     return list.stream()
         .map(AnnotationMirror::getElementValues)
-        .map(this::toSourceTargetTypeNamePair)
+        .map(this::toFromToMapping)
         .collect(toList());
   }
 
-  private Pair<TypeName, TypeName> toSourceTargetTypeNamePair(
+  private FromToMapping toFromToMapping(
       final Map<? extends ExecutableElement, ? extends AnnotationValue> elementMap) {
-    return Pair.of(
-        TypeName.get(findSourceType(elementMap)), TypeName.get(findTargetType(elementMap)));
+    return new FromToMapping()
+        .source(TypeName.get(findSourceType(elementMap)))
+        .target(TypeName.get(findTargetType(elementMap)))
+        .adapterMethodName(findAdapterMethodName(elementMap));
   }
 
   private Optional<? extends Entry<? extends ExecutableElement, ? extends AnnotationValue>>
@@ -119,6 +177,13 @@ public class ConverterMapperProcessor extends AbstractProcessor {
   private boolean hasNameExternalConversions(
       final Entry<? extends ExecutableElement, ? extends AnnotationValue> entry) {
     return hasName(entry.getKey().getSimpleName(), "externalConversions");
+  }
+
+  private static String findAdapterMethodName(
+      final Map<? extends ExecutableElement, ? extends AnnotationValue>
+          externalConversionElementMap) {
+    return defaultIfBlank(
+        findAttribute(externalConversionElementMap, "adapterMethodName", String.class), null);
   }
 
   private static TypeMirror findTargetType(
@@ -137,35 +202,49 @@ public class ConverterMapperProcessor extends AbstractProcessor {
       final Map<? extends ExecutableElement, ? extends AnnotationValue>
           externalConversionElementMap,
       final String attributeName) {
+    return findAttribute(externalConversionElementMap, attributeName, TypeMirror.class);
+  }
+
+  private static <T> T findAttribute(
+      final Map<? extends ExecutableElement, ? extends AnnotationValue>
+          externalConversionElementMap,
+      final String attributeName,
+      final Class<T> attributeClass) {
     return externalConversionElementMap.entrySet().stream()
         .filter(entry -> hasName(entry.getKey().getSimpleName(), attributeName))
         .map(Entry::getValue)
         .map(AnnotationValue::getValue)
-        .map(TypeMirror.class::cast)
+        .map(attributeClass::cast)
         .findFirst()
-        .orElseThrow(IllegalStateException::new);
+        .orElse(null);
   }
 
-  private boolean isMapperAnnotation(TypeElement annotation) {
+  private static boolean isMapperAnnotation(final TypeElement annotation) {
     return MAPPER.contentEquals(annotation.getQualifiedName());
   }
 
   private void processMapperAnnotation(
       final RoundEnvironment roundEnv,
-      final ConversionServiceAdapterDescriptor descriptor,
+      final ConversionServiceAdapterDescriptor adapterDescriptor,
+      final List<DelegatingConverterDescriptor> delegatingConverterDescriptors,
       final TypeElement annotation) {
-    final List<Pair<TypeName, TypeName>> fromToMappings =
+    final List<FromToMapping> fromToMappings =
         roundEnv.getElementsAnnotatedWith(annotation).stream()
             .filter(ConverterMapperProcessor::isKindDeclared)
             .filter(this::hasConverterSupertype)
-            .map(this::toConvertMethod)
-            .filter(Objects::nonNull)
-            .map(ExecutableElement.class::cast)
-            .map(ConverterMapperProcessor::toFromToMapping)
+            .map(this::toFromToMapping)
             .collect(toCollection(ArrayList::new));
-    fromToMappings.addAll(descriptor.getFromToMappings());
-    descriptor.fromToMappings(fromToMappings);
-    writeAdapterClassFile(descriptor);
+    fromToMappings.addAll(adapterDescriptor.getFromToMappings());
+    fromToMappings.addAll(
+        delegatingConverterDescriptors.stream()
+            .map(DelegatingConverterDescriptor::getFromToMapping)
+            .collect(toList()));
+    adapterDescriptor.fromToMappings(fromToMappings);
+    writeAdapterClassFile(adapterDescriptor);
+    if (adapterDescriptor.hasNonDefaultConversionServiceBeanName()
+        && adapterDescriptor.isGenerateConverterScan()) {
+      writeConverterScanFiles(adapterDescriptor);
+    }
   }
 
   private boolean hasConverterSupertype(Element mapper) {
@@ -176,60 +255,56 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return mapper.asType().getKind() == DECLARED;
   }
 
-  private static Pair<TypeName, TypeName> toFromToMapping(final ExecutableElement convert) {
-    return Pair.of(
-        convert.getParameters().stream()
-            .map(Element::asType)
-            .map(TypeName::get)
-            .findFirst()
-            .orElseThrow(NoSuchElementException::new),
-        TypeName.get(convert.getReturnType()));
+  private FromToMapping toFromToMapping(final Element mapper) {
+    final var sourceTypeTargetType = toTypeArguments(mapper);
+
+    return new FromToMapping()
+        .source(TypeName.get(sourceTypeTargetType.get(0)))
+        .target(TypeName.get(sourceTypeTargetType.get(1)))
+        .adapterMethodName(
+            Optional.ofNullable(mapper.getAnnotation(AdapterMethodName.class))
+                .map(AdapterMethodName::value)
+                .orElse(null));
   }
 
-  private Element toConvertMethod(final Element mapper) {
-    return mapper.getEnclosedElements().stream()
-        .filter(ConverterMapperProcessor::isAMethod)
-        .filter(ConverterMapperProcessor::isPublic)
-        .filter(ConverterMapperProcessor::hasNameConvert)
-        .map(ExecutableElement.class::cast)
-        .filter(ConverterMapperProcessor::hasExactlyOneParameter)
-        .filter(convert -> parameterTypeMatches(convert, mapper))
-        .findFirst()
-        .orElse(null);
-  }
-
-  private boolean parameterTypeMatches(final ExecutableElement convert, final Element mapper) {
-    return processingEnv
-        .getTypeUtils()
-        .isSameType(
-            getFirstParameterType(convert),
-            getFirstTypeArgument(
-                getConverterSupertype(mapper).orElseThrow(NoSuchElementException::new)));
-  }
-
-  private static boolean hasExactlyOneParameter(final ExecutableElement convert) {
-    return convert.getParameters().size() == 1;
-  }
-
-  private static boolean hasNameConvert(final Element method) {
-    return hasName(method.getSimpleName(), "convert");
-  }
-
-  private static boolean hasName(final Name name, final String comparisonName) {
-    return name.contentEquals(comparisonName);
-  }
-
-  private static boolean isPublic(final Element method) {
-    return method.getModifiers().contains(PUBLIC);
-  }
-
-  private static boolean isAMethod(final Element element) {
-    return element.getKind() == METHOD;
+  private List<? extends TypeMirror> toTypeArguments(final Element mapper) {
+    return ((DeclaredType) getConverterSupertype(mapper).orElseThrow()).getTypeArguments();
   }
 
   private void writeAdapterClassFile(final ConversionServiceAdapterDescriptor descriptor) {
-    try (final Writer outputWriter = openAdapterFile(descriptor)) {
-      adapterGenerator.writeConversionServiceAdapter(descriptor, outputWriter);
+    writeOutputFile(
+        descriptor, this::openAdapterFile, adapterGenerator, descriptor::getAdapterClassName);
+  }
+
+  private void writeConverterScanFiles(final ConversionServiceAdapterDescriptor descriptor) {
+    writeOutputFile(
+        descriptor,
+        this::openConverterScanFile,
+        converterScanGenerator,
+        descriptor::getConverterScanClassName);
+    writeOutputFile(
+        descriptor,
+        this::openConverterScansFile,
+        converterScansGenerator,
+        descriptor::getConverterScansClassName);
+    writeOutputFile(
+        descriptor,
+        this::openConverterRegistrationConfigurationFile,
+        converterRegistrationConfigurationGenerator,
+        descriptor::getConverterRegistrationConfigurationClassName);
+  }
+
+  private interface OpenFileFunction {
+    Writer open(ConversionServiceAdapterDescriptor descriptor) throws IOException;
+  }
+
+  private void writeOutputFile(
+      final ConversionServiceAdapterDescriptor descriptor,
+      final OpenFileFunction openFileFunction,
+      final AdapterRelatedGenerator generator,
+      final Supplier<ClassName> outputFileClassNameSupplier) {
+    try (final Writer outputWriter = openFileFunction.open(descriptor)) {
+      generator.writeGeneratedCodeToOutput(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv
           .getMessager()
@@ -237,16 +312,28 @@ public class ConverterMapperProcessor extends AbstractProcessor {
               ERROR,
               String.format(
                   "Error while opening %s output file: %s",
-                  descriptor.getAdapterClassName().simpleName(), e.getMessage()));
+                  outputFileClassNameSupplier.get().simpleName(), e.getMessage()));
     }
+  }
+
+  private Writer openConverterRegistrationConfigurationFile(
+      final ConversionServiceAdapterDescriptor descriptor) throws IOException {
+    return openSourceFile(descriptor.getConverterRegistrationConfigurationClassName());
+  }
+
+  private Writer openConverterScanFile(final ConversionServiceAdapterDescriptor descriptor)
+      throws IOException {
+    return openSourceFile(descriptor.getConverterScanClassName());
+  }
+
+  private Writer openConverterScansFile(final ConversionServiceAdapterDescriptor descriptor)
+      throws IOException {
+    return openSourceFile(descriptor.getConverterScansClassName());
   }
 
   private Writer openAdapterFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return processingEnv
-        .getFiler()
-        .createSourceFile(descriptor.getAdapterClassName().canonicalName())
-        .openWriter();
+    return openSourceFile(descriptor.getAdapterClassName());
   }
 
   private ClassName getAdapterClassName(
@@ -297,15 +384,10 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return String.valueOf(processingEnv.getElementUtils().getPackageOf(element).getQualifiedName());
   }
 
-  private String getConversionServiceName(
+  private static String getConversionServiceBeanName(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    return annotations.stream()
-        .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
-        .findFirst()
-        .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
-        .map(this::toSpringMapperConfig)
-        .map(SpringMapperConfig::conversionServiceBeanName)
-        .orElse(null);
+    return getConfigAnnotationAttribute(
+        annotations, roundEnv, SpringMapperConfig::conversionServiceBeanName, null);
   }
 
   private static Optional<? extends Element> findFirstElementAnnotatedWith(
@@ -313,7 +395,7 @@ public class ConverterMapperProcessor extends AbstractProcessor {
     return roundEnv.getElementsAnnotatedWith(annotation).stream().findFirst();
   }
 
-  private SpringMapperConfig toSpringMapperConfig(final Element element) {
+  private static SpringMapperConfig toSpringMapperConfig(final Element element) {
     return element.getAnnotation(SpringMapperConfig.class);
   }
 
@@ -331,15 +413,30 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .equals(annotationMirror.getAnnotationType().asElement().asType());
   }
 
-  private boolean getLazyAnnotatedConversionServiceBean(
+  private static boolean getLazyAnnotatedConversionServiceBean(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    return getConfigAnnotationAttribute(
+        annotations, roundEnv, SpringMapperConfig::lazyAnnotatedConversionServiceBean, TRUE);
+  }
+
+  private static boolean getGenerateConverterScan(
+      final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    return getConfigAnnotationAttribute(
+        annotations, roundEnv, SpringMapperConfig::generateConverterScan, FALSE);
+  }
+
+  private static <T> T getConfigAnnotationAttribute(
+      final Set<? extends TypeElement> annotations,
+      final RoundEnvironment roundEnv,
+      final Function<SpringMapperConfig, T> attributeGetter,
+      final T defaultValue) {
     return annotations.stream()
         .filter(ConverterMapperProcessor::isSpringMapperConfigAnnotation)
         .findFirst()
         .flatMap(annotation -> findFirstElementAnnotatedWith(roundEnv, annotation))
-        .map(this::toSpringMapperConfig)
-        .map(SpringMapperConfig::lazyAnnotatedConversionServiceBean)
-        .orElse(TRUE);
+        .map(ConverterMapperProcessor::toSpringMapperConfig)
+        .map(attributeGetter)
+        .orElse(defaultValue);
   }
 
   private Optional<? extends TypeMirror> getConverterSupertype(final Element mapper) {
@@ -356,13 +453,5 @@ public class ConverterMapperProcessor extends AbstractProcessor {
         .erasure(supertype)
         .toString()
         .equals(SPRING_CONVERTER_FULL_NAME);
-  }
-
-  private static TypeMirror getFirstParameterType(final ExecutableElement convert) {
-    return convert.getParameters().stream().findFirst().map(Element::asType).orElse(null);
-  }
-
-  private static TypeMirror getFirstTypeArgument(final TypeMirror converterSupertype) {
-    return ((DeclaredType) converterSupertype).getTypeArguments().stream().findFirst().orElse(null);
   }
 }

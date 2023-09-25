@@ -2,6 +2,7 @@ rootProject.name = 'mapstruct-spring-extensions-aggregator'
 
 include "annotations"
 include "extensions"
+include "test-extensions"
 include "examples"
 include "examples:model"
 include "examples:noconfig"
@@ -9,10 +10,14 @@ include "examples:packagename"
 include "examples:classname"
 include "examples:packagename-and-classname"
 include "examples:custom-conversion-service-bean"
+include "examples:custom-conversion-service-bean-with-converter-scan"
 include "examples:simple-springboot"
 include "examples:external-conversions"
 include "examples:arrays"
+include "examples:no-explicit-convert"
+include "examples:delegatingconverter"
 include "docs"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 

@@ -1,8 +1,9 @@
 package org.mapstruct.extensions.spring;
 
-import java.lang.annotation.ElementType;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
+
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
@@ -10,10 +11,11 @@ import java.lang.annotation.Target;
  * org.springframework.core.convert.ConversionService ConversionService}, but is <em>not</em>
  * declared as a MapStruct mapper within the scope of the {@link SpringMapperConfig}.
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.SOURCE)
+@Target(TYPE)
+@Retention(SOURCE)
 public @interface ExternalConversion {
   Class<?> sourceType();
 
   Class<?> targetType();
+  String adapterMethodName() default "";
 }

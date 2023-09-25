@@ -3,10 +3,11 @@ plugins {
     id 'jacoco'
     id 'maven-publish'
     id 'signing'
-    alias(libs.plugins.vers)
+    alias(libs.plugins.asciidoctor) apply false
+    alias(libs.plugins.dependencycheck)
     alias(libs.plugins.spring.boot) apply false
     alias(libs.plugins.spring.dependency.management) apply false
-    alias(libs.plugins.asciidoctor) apply false
+    alias(libs.plugins.vers)
 }
 
 def isNonStable = { String version ->
@@ -37,6 +38,16 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    dependencyCheck {
+        analyzers {
+            assemblyEnabled = false
+            nodeEnabled = false
+            nodeAuditEnabled = false
+            nugetconfEnabled = false
+            nuspecEnabled = false
+        }
+    }
 }
 
 subprojects {
@@ -44,21 +55,27 @@ subprojects {
     apply plugin: "jacoco"
 
     group = 'org.mapstruct.extensions.spring'
-    version = '0.2.0-SNAPSHOT'
+    version = '1.1.1-SNAPSHOT'
 
     java {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(11))
         }
+
+        withJavadocJar()
+        withSourcesJar()
     }
 
-    test {
-        // Use junit platform for unit tests
-        useJUnitPlatform()
+    testing {
+        suites {
+            test {
+                useJUnitJupiter()
+            }
+        }
     }
 
     jacoco {
-        toolVersion = "0.8.5"
+        toolVersion = "0.8.9"
     }
 
     jacocoTestReport {

@@ -1,7 +1,7 @@
 [[setup]]
 == Set up
 
-MapStruct Spring Extensions is a Java annotation processor based on http://www.jcp.org/en/jsr/detail?id=269[JSR 269] and as such can be used within command line builds (javac, Ant, Maven etc.) as well as from within your IDE.
+MapStruct Spring Extensions is a Java annotation processor based on http://www.jcp.org/en/jsr/detail?id=269[JSR 269] and as such can be used within command line builds (javac, Ant, Maven etc.) as well as from within your IDE. The minimum JDK version is 11.
 
 IMPORTANT: Also, you will need MapStruct itself (at least version `1.4.0.Final`) in your project.
 
@@ -56,6 +56,25 @@ For Maven based projects add the following to your POM file in order to use MapS
 ----
 ====
 
+If you wish to use the <<testExtensions,test extensions>>, additionally add the following:
+
+====
+[source, xml, linenums]
+[subs="verbatim,attributes"]
+----
+...
+<dependencies>
+    <dependency>
+        <groupId>org.mapstruct.extensions.spring</groupId>
+        <artifactId>mapstruct-spring-test-extensions</artifactId>
+        <scope>test</scope>
+        <version>${org.mapstruct.extensions.spring.version}</version>
+    </dependency>
+</dependencies>
+...
+----
+====
+
 [TIP]
 ====
 If you are working with the Eclipse IDE, make sure to have a current version of the http://www.eclipse.org/m2e/[M2E plug-in].
@@ -96,6 +115,20 @@ dependencies {
 ...
 ----
 ====
+And for <<testExtensions,test extensions>>:
+====
+[source, groovy, linenums]
+[subs="verbatim,attributes"]
+----
+...
+
+dependencies {
+    ...
+    testImplementation "org.mapstruct.extensions.spring:mapstruct-spring-test-extensions:${mapstructSpringExtensionsVersion}"
+}
+...
+----
+====
 .Gradle configuration (3.4 - 5.1)
 ====
 [source, groovy, linenums]
@@ -123,6 +156,20 @@ dependencies {
 ...
 ----
 ====
+And for <<testExtensions,test extensions>>:
+====
+[source, groovy, linenums]
+[subs="verbatim,attributes"]
+----
+...
+
+dependencies {
+    ...
+    testImplementation "org.mapstruct.extensions.spring:mapstruct-spring-test-extensions:${mapstructSpringExtensionsVersion}"
+}
+...
+----
+====
 .Gradle (3.3 and older)
 ====
 [source, groovy, linenums]
@@ -146,6 +193,20 @@ dependencies {
 
     // If you are using MapStruct Spring Extensions in test code
     testAnnotationProcessor "org.mapstruct.extensions.spring:mapstruct-spring-extensions:${mapstructSpringExtensionsVersion}"
+}
+...
+----
+====
+And for <<testExtensions,test extensions>>:
+====
+[source, groovy, linenums]
+[subs="verbatim,attributes"]
+----
+...
+
+dependencies {
+    ...
+    testCompile "org.mapstruct.extensions.spring:mapstruct-spring-test-extensions:${mapstructSpringExtensionsVersion}"
 }
 ...
 ----

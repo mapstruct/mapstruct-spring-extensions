@@ -10,15 +10,11 @@ dependencies {
     testImplementation libs.bundles.junit.jupiter
     testImplementation libs.commons.io
     testImplementation libs.compile.testing
+    testImplementation libs.dummymaker
     testImplementation libs.guava
     testImplementation libs.mapstruct.core
     testImplementation libs.mockito
     testImplementation libs.spring.core
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
 }
 
 publishing {
