@@ -3,6 +3,7 @@ asciidoctorPlugin = "3.3.2"
 assertj = "3.24.2"
 commons-io = "2.13.0"
 commons-lang3 = "3.13.0"
+compile-testing = "0.21.0"
 dependencyCheck = "8.4.0"
 dummymaker = "4.0.0"
 guava = "32.1.2-jre"
@@ -21,6 +22,7 @@ versionsPlugin = "0.48.0"
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
 commons-io = { group = "commons-io", name = "commons-io", version.ref = "commons-io" }
 commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version.ref = "commons-lang3" }
+compile-testing = { group = "com.google.testing.compile", name = "compile-testing", version.ref = "compile-testing" }
 dummymaker = { group = "com.github.goodforgod", name = "dummymaker", version.ref = "dummymaker"}
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 jakarta-annotation = { group = "jakarta.annotation", name = "jakarta.annotation-api", version.ref = "jakarta-annotation-api" }

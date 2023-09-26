@@ -1,14 +1,12 @@
 package org.mapstruct.extensions.spring.converter;
 
 import static com.google.common.collect.Iterables.concat;
-import static java.nio.file.Files.createTempDirectory;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static javax.lang.model.element.Modifier.*;
-import static javax.tools.StandardLocation.CLASS_OUTPUT;
 
+import com.google.testing.compile.Compilation;
+import com.google.testing.compile.Compiler;
 import com.squareup.javapoet.*;
-import java.io.IOException;
 import java.util.Set;
 import javax.annotation.processing.Processor;
 import javax.tools.*;
@@ -49,27 +47,14 @@ class AbstractProcessorTest {
           COMPONENT_JAVA_FILE_OBJECT,
           LAZY_JAVA_FILE_OBJECT);
 
-  protected static boolean compile(
-      final Processor processor, final JavaFileObject... additionalCompilationUnits)
-      throws IOException {
+  protected static Compilation compile(
+      final Processor processor, final JavaFileObject... additionalCompilationUnits) {
     return compile(processor, concat(COMMON_COMPILATION_UNITS, asList(additionalCompilationUnits)));
   }
 
-  protected static boolean compile(
-      final Processor processor, final Iterable<JavaFileObject> compilationUnits)
-      throws IOException {
-    final var compiler = ToolProvider.getSystemJavaCompiler();
-
-    final var diagnostics = new DiagnosticCollector<JavaFileObject>();
-    final var fileManager = compiler.getStandardFileManager(diagnostics, null, null);
-    fileManager.setLocation(CLASS_OUTPUT, singletonList(createTempDirectory("classes").toFile()));
-
-    final var task = compiler.getTask(null, fileManager, diagnostics, null, null, compilationUnits);
-    task.setProcessors(singletonList(processor));
-
-    final var success = task.call();
-    diagnostics.getDiagnostics().forEach(System.err::println);
-    return success;
+  protected static Compilation compile(
+      final Processor processor, final Iterable<JavaFileObject> compilationUnits) {
+    return Compiler.javac().withProcessors(processor).compile(compilationUnits);
   }
 
   private static TypeSpec buildSimpleModelClassTypeSpec(final String className) {
