@@ -2,6 +2,7 @@ package org.mapstruct.extensions.spring.converter;
 
 import static com.google.common.collect.Iterables.concat;
 import static com.google.testing.compile.CompilationSubject.assertThat;
+import static com.google.testing.compile.Compiler.javac;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 import static javax.lang.model.element.Modifier.*;
@@ -10,7 +11,6 @@ import static org.assertj.core.api.InstanceOfAssertFactories.list;
 import static org.mockito.ArgumentMatchers.any;
 
 import com.google.testing.compile.Compilation;
-import com.google.testing.compile.Compiler;
 import com.squareup.javapoet.*;
 import java.io.Writer;
 import java.lang.annotation.Retention;
@@ -86,7 +86,7 @@ class ConverterMapperProcessorTest extends AbstractProcessorTest {
 
     // When - Then
     assertThat(
-            Compiler.javac()
+            javac()
                 .withProcessors(processor)
                 .compile(concat(List.of(mapperFile.toJavaFileObject()), COMMON_COMPILATION_UNITS)))
         .succeeded();
@@ -109,7 +109,7 @@ class ConverterMapperProcessorTest extends AbstractProcessorTest {
 
     // When - Then
     assertThat(
-            Compiler.javac()
+            javac()
                 .withProcessors(processor)
                 .compile(concat(List.of(mapperFile.toJavaFileObject()), COMMON_COMPILATION_UNITS)))
         .succeeded();
@@ -133,7 +133,7 @@ class ConverterMapperProcessorTest extends AbstractProcessorTest {
 
     // When - Then
     assertThat(
-            Compiler.javac()
+            javac()
                 .withProcessors(processor)
                 .compile(concat(List.of(mapperFile.toJavaFileObject()), COMMON_COMPILATION_UNITS)))
         .succeeded();
@@ -206,7 +206,7 @@ class ConverterMapperProcessorTest extends AbstractProcessorTest {
 
     // When - Then
     assertThat(
-            Compiler.javac()
+            javac()
                 .withProcessors(processor)
                 .compile(
                     concat(List.of(plainMapperFile.toJavaFileObject()), COMMON_COMPILATION_UNITS)))
@@ -232,7 +232,7 @@ class ConverterMapperProcessorTest extends AbstractProcessorTest {
 
     // When - Then
     assertThat(
-            Compiler.javac()
+            javac()
                 .withProcessors(processor)
                 .compile(concat(List.of(mapperFile.toJavaFileObject()), COMMON_COMPILATION_UNITS)))
         .succeeded();
@@ -260,7 +260,7 @@ class ConverterMapperProcessorTest extends AbstractProcessorTest {
 
     // When - Then
     assertThat(
-            Compiler.javac()
+            javac()
                 .withProcessors(processor)
                 .compile(
                     concat(
@@ -329,12 +329,11 @@ class ConverterMapperProcessorTest extends AbstractProcessorTest {
     final var autowiredFile =
         JavaFile.builder("org.springframework.beans.factory.annotation", autowiredTypeSpec).build();
 
-    final var compileResult =
-        compile(
-            delegatingConverterFile.toJavaFileObject(),
-            mapperFile.toJavaFileObject(),
-            autowiredFile.toJavaFileObject());
-
-    assertThat(compileResult).succeeded();
+    assertThat(
+            compile(
+                delegatingConverterFile.toJavaFileObject(),
+                mapperFile.toJavaFileObject(),
+                autowiredFile.toJavaFileObject()))
+        .succeeded();
   }
 }
