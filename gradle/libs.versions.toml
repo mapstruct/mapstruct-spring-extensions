@@ -1,22 +1,22 @@
 [versions]
 asciidoctorPlugin = "3.3.2"
 assertj = "3.24.2"
-commons-io = "2.13.0"
+commons-io = "2.15.0"
 commons-lang3 = "3.13.0"
 compile-testing = "0.21.0"
-dependencyCheck = "8.4.0"
+dependencyCheck = "8.4.2"
 dummymaker = "4.0.0"
-guava = "32.1.2-jre"
+guava = "32.1.3-jre"
 jakarta-annotation-api = "1.3.5"
 javapoet = "1.13.0"
 jsr250 = "1.0"
 jupiter = "5.10.0"
 mapstruct = "1.4.0.Final"
-mockito = "5.5.0"
+mockito = "5.6.0"
 spring = "5.0.0.RELEASE"
 springBoot = "2.7.16"
 springDependencyManagement = "1.1.3"
-versionsPlugin = "0.48.0"
+versionsPlugin = "0.49.0"
 
 [libraries]
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
