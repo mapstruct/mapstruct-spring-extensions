@@ -2,8 +2,8 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
-    implementation libs.spring.core
-    implementation libs.spring.context
+    compileOnly libs.spring.core
+    compileOnly libs.spring.context
     implementation libs.jakarta.annotation
 
     testImplementation libs.mockito
