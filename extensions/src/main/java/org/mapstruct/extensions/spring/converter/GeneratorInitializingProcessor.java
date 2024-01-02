@@ -5,6 +5,7 @@ import com.squareup.javapoet.ClassName;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
@@ -27,7 +28,7 @@ public abstract class GeneratorInitializingProcessor extends AbstractProcessor {
     return SourceVersion.latestSupported();
   }
 
-  protected final Writer openSourceFile(final ClassName className) throws IOException {
-    return processingEnv.getFiler().createSourceFile(className.canonicalName()).openWriter();
+  protected final Writer openSourceFile(final Supplier<ClassName> classNameSupplier) throws IOException {
+    return processingEnv.getFiler().createSourceFile(classNameSupplier.get().canonicalName()).openWriter();
   }
 }

@@ -109,7 +109,7 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
   }
 
   private void writeDelegatingConverterFile(final DelegatingConverterDescriptor descriptor) {
-    try (final Writer outputWriter = openSourceFile(descriptor.getConverterClassName())) {
+    try (final Writer outputWriter = openSourceFile(descriptor::getConverterClassName)) {
       delegatingConverterGenerator.writeGeneratedCodeToOutput(descriptor, outputWriter);
     } catch (IOException e) {
       processingEnv
@@ -318,22 +318,22 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
 
   private Writer openConverterRegistrationConfigurationFile(
       final ConversionServiceAdapterDescriptor descriptor) throws IOException {
-    return openSourceFile(descriptor.getConverterRegistrationConfigurationClassName());
+    return openSourceFile(descriptor::getConverterRegistrationConfigurationClassName);
   }
 
   private Writer openConverterScanFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return openSourceFile(descriptor.getConverterScanClassName());
+    return openSourceFile(descriptor::getConverterScanClassName);
   }
 
   private Writer openConverterScansFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return openSourceFile(descriptor.getConverterScansClassName());
+    return openSourceFile(descriptor::getConverterScansClassName);
   }
 
   private Writer openAdapterFile(final ConversionServiceAdapterDescriptor descriptor)
       throws IOException {
-    return openSourceFile(descriptor.getAdapterClassName());
+    return openSourceFile(descriptor::getAdapterClassName);
   }
 
   private ClassName getAdapterClassName(
