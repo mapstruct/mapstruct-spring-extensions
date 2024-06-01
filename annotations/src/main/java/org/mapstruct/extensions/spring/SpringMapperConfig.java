@@ -64,4 +64,18 @@ public @interface SpringMapperConfig {
    *     through the generated Adapter.
    */
   ExternalConversion[] externalConversions() default {};
+
+  /**
+   * Annotations to add to the generated adapter.
+   *
+   * @return Annotations to add to the generated adapter.
+   */
+  Class<?>[] annotateAdapterWith() default {};
+
+  /**
+   * Annotations to add to the generated ConverterScan
+   *
+   * @return Annotations to add to the generated ConverterScan
+   */
+  Class<?>[] annotateConverterScanWith() default {};
 }
