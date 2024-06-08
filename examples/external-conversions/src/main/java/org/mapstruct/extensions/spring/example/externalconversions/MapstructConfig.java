@@ -1,11 +1,11 @@
 package org.mapstruct.extensions.spring.example.externalconversions;
 
+import java.sql.Blob;
+import java.util.Locale;
+
 import org.mapstruct.MapperConfig;
 import org.mapstruct.extensions.spring.ExternalConversion;
 import org.mapstruct.extensions.spring.SpringMapperConfig;
-
-import java.sql.Blob;
-import java.util.Locale;
 
 @MapperConfig(componentModel = "spring")
 @SpringMapperConfig(

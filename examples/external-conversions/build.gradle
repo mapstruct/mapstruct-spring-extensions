@@ -1,3 +1,5 @@
+apply plugin: "io.github.themrmilchmann.ecj"
+
 dependencies {
     annotationProcessor project(":extensions")
     implementation projects.examples.model
