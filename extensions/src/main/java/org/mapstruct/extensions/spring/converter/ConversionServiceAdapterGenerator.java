@@ -8,6 +8,8 @@ import static org.mapstruct.extensions.spring.converter.TypeNameUtils.rawType;
 
 import com.squareup.javapoet.*;
 import java.time.Clock;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -39,9 +41,34 @@ public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
     return adapterClassTypeSpec
         .addAnnotation(COMPONENT_ANNOTATION_CLASS_NAME)
         .addField(conversionServiceFieldSpec)
+            .addFields(buildTypeDescriptorFields(descriptor, conversionServiceFieldSpec))
         .addMethod(buildConstructorSpec(descriptor, conversionServiceFieldSpec))
         .addMethods(buildMappingMethods(descriptor, conversionServiceFieldSpec))
         .build();
+  }
+
+  private List<FieldSpec> buildTypeDescriptorFields(ConversionServiceAdapterDescriptor descriptor, FieldSpec conversionServiceFieldSpec)
+  {
+      return descriptor.getFromToMappings().stream()
+              .flatMap(fromToMapping -> Stream.of(fromToMapping.getSource(), fromToMapping.getTarget()))
+              .distinct()
+              .map(typeName -> FieldSpec.builder(TYPE_DESCRIPTOR_CLASS_NAME, fieldName(typeName), PRIVATE, STATIC, FINAL)
+                          .initializer(String.format("%s", typeDescriptorFormat(typeName)), typeDescriptorArguments(typeName).toArray()).build())
+              .collect(toList());
+  }
+
+  private String fieldName(TypeName typeName) {
+      String fieldName = "TYPE_DESCRIPTOR_" + typeName.toString()
+              .replace('.', '_')
+              .replace('<', '_')
+              .replace('>', '_')
+              .replace("[]", "_ARRAY")
+              .toUpperCase(Locale.ROOT);
+      if (fieldName.lastIndexOf('_') == fieldName.length() - 1) {
+        return fieldName.substring(0, fieldName.length() - 1);
+      } else {
+        return fieldName;
+      }
   }
 
   private static MethodSpec buildConstructorSpec(
@@ -110,26 +137,10 @@ public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
         .addStatement(
             String.format(
                 "return ($T) $N.convert($N, %s, %s)",
-                typeDescriptorFormat(fromToMapping.getSource()),
-                typeDescriptorFormat(fromToMapping.getTarget())),
-            allTypeDescriptorArguments(
-                injectedConversionServiceFieldSpec, sourceParameterSpec, fromToMapping))
+                fieldName(fromToMapping.getSource()),
+                fieldName(fromToMapping.getTarget())),
+                fromToMapping.getTarget(), injectedConversionServiceFieldSpec, sourceParameterSpec)
         .build();
-  }
-
-  private Object[] allTypeDescriptorArguments(
-      final FieldSpec injectedConversionServiceFieldSpec,
-      final ParameterSpec sourceParameterSpec,
-      final FromToMapping fromToMapping) {
-    return concat(
-            concat(
-                Stream.of(
-                    fromToMapping.getTarget(),
-                    injectedConversionServiceFieldSpec,
-                    sourceParameterSpec),
-                typeDescriptorArguments(fromToMapping.getSource())),
-            typeDescriptorArguments(fromToMapping.getTarget()))
-        .toArray();
   }
 
   private String typeDescriptorFormat(final TypeName typeName) {
