@@ -15,15 +15,15 @@ import test.CarDto;
     date = "2020-03-29T15:21:34.236Z")
 @Component
 public class ConversionServiceAdapter {
+  private static final TypeDescriptor TYPE_DESCRIPTOR_TEST_CAR = TypeDescriptor.valueOf(Car.class);
+
+  private static final TypeDescriptor TYPE_DESCRIPTOR_TEST_CARDTO = TypeDescriptor.valueOf(CarDto.class);
+
+  private static final TypeDescriptor TYPE_DESCRIPTOR_JAVA_UTIL_LIST_TEST_CAR = TypeDescriptor.collection(List.class, TypeDescriptor.valueOf(Car.class));
+
+  private static final TypeDescriptor TYPE_DESCRIPTOR_JAVA_UTIL_LIST_TEST_CARDTO = TypeDescriptor.collection(List.class, TypeDescriptor.valueOf(CarDto.class));
+
   private final ConversionService conversionService;
-
-  private final TypeDescriptor typeDescriptor_test_Car = TypeDescriptor.valueOf(Car.class);
-
-  private final TypeDescriptor typeDescriptor_test_CarDto = TypeDescriptor.valueOf(CarDto.class);
-
-  private final TypeDescriptor typeDescriptor_java_util_List_test_Car_ = TypeDescriptor.collection(List.class, TypeDescriptor.valueOf(Car.class));
-
-  private final TypeDescriptor typeDescriptor_java_util_List_test_CarDto_ = TypeDescriptor.collection(List.class, TypeDescriptor.valueOf(CarDto.class));
 
   public ConversionServiceAdapter(
           @Qualifier("myConversionService") @Lazy final ConversionService conversionService) {
@@ -31,10 +31,10 @@ public class ConversionServiceAdapter {
   }
 
   public CarDto toDto(final Car source) {
-    return (CarDto) conversionService.convert(source, typeDescriptor_test_Car, typeDescriptor_test_CarDto);
+    return (CarDto) conversionService.convert(source, TYPE_DESCRIPTOR_TEST_CAR, TYPE_DESCRIPTOR_TEST_CARDTO);
   }
 
   public List<CarDto> mapListOfCarToListOfCarDto(final List<Car> source) {
-    return (List<CarDto>) conversionService.convert(source, typeDescriptor_java_util_List_test_Car_, typeDescriptor_java_util_List_test_CarDto_);
+    return (List<CarDto>) conversionService.convert(source, TYPE_DESCRIPTOR_JAVA_UTIL_LIST_TEST_CAR, TYPE_DESCRIPTOR_JAVA_UTIL_LIST_TEST_CARDTO);
   }
 }

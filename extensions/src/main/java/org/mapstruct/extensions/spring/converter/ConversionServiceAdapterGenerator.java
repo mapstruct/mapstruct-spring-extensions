@@ -9,6 +9,7 @@ import static org.mapstruct.extensions.spring.converter.TypeNameUtils.rawType;
 import com.squareup.javapoet.*;
 import java.time.Clock;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -51,16 +52,22 @@ public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
       return descriptor.getFromToMappings().stream()
               .flatMap(fromToMapping -> Stream.of(fromToMapping.getSource(), fromToMapping.getTarget()))
               .distinct()
-              .map(typeName -> FieldSpec.builder(TYPE_DESCRIPTOR_CLASS_NAME, fieldName(typeName), PRIVATE, FINAL)
+              .map(typeName -> FieldSpec.builder(TYPE_DESCRIPTOR_CLASS_NAME, fieldName(typeName), PRIVATE, STATIC, FINAL)
                           .initializer(String.format("%s", typeDescriptorFormat(typeName)), typeDescriptorArguments(typeName).toArray()).build())
               .collect(toList());
   }
 
   private String fieldName(TypeName typeName) {
-      return "typeDescriptor_" + typeName.toString()
+      String fieldName = "TYPE_DESCRIPTOR_" + typeName.toString()
               .replace('.', '_')
               .replace('<', '_')
-              .replace('>', '_');
+              .replace('>', '_')
+              .toUpperCase(Locale.ROOT);
+      if (fieldName.lastIndexOf('_') == fieldName.length() - 1) {
+        return fieldName.substring(0, fieldName.length() - 1);
+      } else {
+        return fieldName;
+      }
   }
 
   private static MethodSpec buildConstructorSpec(
