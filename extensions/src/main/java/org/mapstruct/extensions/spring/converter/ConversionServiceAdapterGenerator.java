@@ -62,6 +62,7 @@ public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
               .replace('.', '_')
               .replace('<', '_')
               .replace('>', '_')
+              .replace("[]", "_ARRAY")
               .toUpperCase(Locale.ROOT);
       if (fieldName.lastIndexOf('_') == fieldName.length() - 1) {
         return fieldName.substring(0, fieldName.length() - 1);
