@@ -55,19 +55,19 @@ public class ConverterRegistrationConfigurationGenerator extends AdapterRelatedG
         .build();
   }
 
-  private static final ClassName POST_CONSTRUCT = discoverPostConstruct();
-  private static ClassName discoverPostConstruct() {
-    try {
-      return ClassName.get(Class.forName("jakarta.annotation.PostConstruct"));
-    } catch (ClassNotFoundException e) {}
-
-    return ClassName.get("javax.annotation", "PostConstruct");
+  private ClassName postConstructClassName() {
+    if (isTypeAvailable("jakarta.annotation.PostConstruct")) {
+      return ClassName.get("jakarta.annotation", "PostConstruct");
+    } else {
+      return ClassName.get("javax.annotation", "PostConstruct");
+    }
   }
 
-  private static MethodSpec createRegistrationMethodSpec(
+  private MethodSpec createRegistrationMethodSpec(
       final FieldSpec convertersFieldSpec, final FieldSpec conversionServiceFieldSpec) {
+
     return MethodSpec.methodBuilder("registerConverters")
-        .addAnnotation(POST_CONSTRUCT)
+        .addAnnotation(postConstructClassName())
         .addStatement(
             "$N.forEach($N::addConverter)", convertersFieldSpec, conversionServiceFieldSpec)
         .build();

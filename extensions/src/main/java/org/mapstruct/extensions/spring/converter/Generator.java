@@ -80,7 +80,7 @@ public abstract class Generator {
     return getProcessingEnvironment().getSourceVersion().compareTo(RELEASE_8) > 0;
   }
 
-  private boolean isTypeAvailable(final String name) {
+  protected boolean isTypeAvailable(final String name) {
     return getProcessingEnvironment().getElementUtils().getTypeElement(name) != null;
   }
 
