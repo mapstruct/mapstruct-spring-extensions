@@ -3,8 +3,10 @@ package org.mapstruct.extensions.spring.converter;
 import static java.lang.Boolean.TRUE;
 import static javax.lang.model.SourceVersion.RELEASE_8;
 import static javax.lang.model.SourceVersion.RELEASE_9;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.Map;
@@ -12,11 +14,15 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+
+import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
@@ -120,6 +126,24 @@ class ConverterRegistrationConfigurationGeneratorTest extends AdapterRelatedGene
             .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
                 "ConverterRegistrationConfigurationNoGenerated.java",
                 underTest::writeGeneratedCodeToOutput);
+      }
+    }
+
+    @Nested
+    class NoGeneratedJakartaAnnotation {
+      @BeforeEach
+      void initElements() {
+        isAtLeastJava9 = false;
+        when(elements.getTypeElement(anyString()))
+            .thenReturn(null, mock(TypeElement.class)); // first for Generated, second for PostConstruct
+      }
+
+      @Test
+      void shouldGenerateMatchingOutput() throws IOException {
+        ConverterRegistrationConfigurationGeneratorTest.this
+            .shouldGenerateMatchingOutputWhenUsingCustomConversionService(
+                    "ConverterRegistrationConfigurationNoGeneratedJakartaAnnotation.java",
+                    underTest::writeGeneratedCodeToOutput);
       }
     }
   }
