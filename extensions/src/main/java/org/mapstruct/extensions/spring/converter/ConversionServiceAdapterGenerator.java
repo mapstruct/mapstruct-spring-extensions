@@ -11,6 +11,7 @@ import java.time.Clock;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
@@ -25,6 +26,7 @@ public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
       ClassName.get("org.springframework.core.convert", "TypeDescriptor");
   private static final ClassName COMPONENT_ANNOTATION_CLASS_NAME =
       ClassName.get("org.springframework.stereotype", "Component");
+  private static final Pattern NON_WORD_PATTERN = Pattern.compile("\\W");
 
   public ConversionServiceAdapterGenerator(final Clock clock) {
     super(clock);
@@ -58,13 +60,12 @@ public class ConversionServiceAdapterGenerator extends AdapterRelatedGenerator {
   }
 
   private String fieldName(TypeName typeName) {
-      String fieldName = "TYPE_DESCRIPTOR_" + typeName.toString()
-              .replace('.', '_')
-              .replace('<', '_')
-              .replace('>', '_')
-              .replace("[]", "_ARRAY")
+      String fieldName = "TYPE_DESCRIPTOR_" + NON_WORD_PATTERN.matcher(typeName.toString())
+              .replaceAll("_")
               .toUpperCase(Locale.ROOT);
+
       if (fieldName.lastIndexOf('_') == fieldName.length() - 1) {
+        // drop trailing underscore
         return fieldName.substring(0, fieldName.length() - 1);
       } else {
         return fieldName;
