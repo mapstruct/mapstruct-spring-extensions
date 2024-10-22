@@ -1,8 +1,30 @@
+plugins {
+    alias(libs.plugins.jreleaser)
+}
+
 apply plugin: "maven-publish"
 apply plugin: "signing"
 
 dependencies {
     implementation libs.spring.core
+}
+
+jreleaser {
+    project {
+        authors = ['Raimund Klein']
+        license = 'Apache-2.0'
+        links {
+            homepage = 'https://mapstruct.org'
+        }
+        inceptionYear = '2020'
+    }
+
+    release {
+        github {
+            repoOwner = 'mapstruct'
+            overwrite = true
+        }
+    }
 }
 
 publishing {
