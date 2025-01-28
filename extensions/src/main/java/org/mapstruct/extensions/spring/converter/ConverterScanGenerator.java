@@ -15,10 +15,6 @@ public class ConverterScanGenerator extends AdapterRelatedGenerator {
       ClassName.get(SPRING_CONTEXT_ANNOTATION_PACKAGE_NAME, "ComponentScan");
   private static final ClassName IMPORT_CLASS_NAME =
       ClassName.get(SPRING_CONTEXT_ANNOTATION_PACKAGE_NAME, "Import");
-  private static final AnnotationSpec IMPORT_ANNOTATION_SPEC =
-      AnnotationSpec.builder(IMPORT_CLASS_NAME)
-          .addMember("value", "$L", "ConverterRegistrationConfiguration.class")
-          .build();
   private static final AnnotationSpec REPEATABLE_ANNOTATION_SPEC =
       AnnotationSpec.builder(Repeatable.class)
           .addMember("value", "$L", "ConverterScans.class")
@@ -43,12 +39,16 @@ public class ConverterScanGenerator extends AdapterRelatedGenerator {
   protected TypeSpec createMainTypeSpec(final ConversionServiceAdapterDescriptor descriptor) {
     final var converterScanClassTypeSpecBuilder =
         TypeSpec.annotationBuilder(descriptor.getConverterScanClassName()).addModifiers(PUBLIC);
+    final var importAnnotationSpec =
+            AnnotationSpec.builder(IMPORT_CLASS_NAME)
+                    .addMember("value", "$L", descriptor.getConverterRegistrationConfigurationClassName() + ".class")
+                    .build();
     Optional.ofNullable(buildGeneratedAnnotationSpec())
         .ifPresent(converterScanClassTypeSpecBuilder::addAnnotation);
     converterScanClassTypeSpecBuilder
         .addAnnotation(COMPONENT_SCAN_CLASS_NAME)
         .addAnnotation(TARGET_TYPE_ANNOTATION_SPEC)
-        .addAnnotation(IMPORT_ANNOTATION_SPEC)
+        .addAnnotation(importAnnotationSpec)
         .addAnnotation(Documented.class)
         .addAnnotation(RETENTION_RUNTIME_ANNOTATION_SPEC)
         .addAnnotation(REPEATABLE_ANNOTATION_SPEC)
