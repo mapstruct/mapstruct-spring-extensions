@@ -14,6 +14,20 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 public @interface SpringMapperConfig {
+
+  String DEFAULT_CONVERSION_SERVICE_BEAN_NAME = "conversionService";
+  String DEFAULT_ADAPTER_CLASS_NAME = "ConversionServiceAdapter";
+  String DEFAULT_CONFIGURATION_CLASS_NAME = "ConverterRegistrationConfiguration";
+
+  /**
+   * The class name for the generated Configuration class,
+   * which is performing auto-registration of converters/mappers
+   * to Spring's {@link org.springframework.core.convert.ConversionService}.
+   *
+   * @return The class name for the generated Configuration.
+   */
+  String converterRegistrationConfigurationClassName() default DEFAULT_CONFIGURATION_CLASS_NAME;
+
   /**
    * The package name for the generated Adapter between the MapStruct mappers and Spring's {@link
    * org.springframework.core.convert.ConversionService}. If omitted or empty, the package name will
@@ -29,7 +43,7 @@ public @interface SpringMapperConfig {
    *
    * @return The class name for the generated Adapter.
    */
-  String conversionServiceAdapterClassName() default "ConversionServiceAdapter";
+  String conversionServiceAdapterClassName() default DEFAULT_ADAPTER_CLASS_NAME;
 
   /**
    * The bean name for the Spring {@link org.springframework.core.convert.ConversionService} to use.
@@ -37,7 +51,7 @@ public @interface SpringMapperConfig {
    * @return The bean name for the Spring {@link
    *     org.springframework.core.convert.ConversionService}.
    */
-  String conversionServiceBeanName() default "";
+  String conversionServiceBeanName() default DEFAULT_CONVERSION_SERVICE_BEAN_NAME;
 
   /**
    * To set if the Lazy annotation will be added to the ConversionService's usage in the

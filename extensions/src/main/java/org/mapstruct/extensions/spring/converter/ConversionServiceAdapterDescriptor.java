@@ -1,20 +1,27 @@
 package org.mapstruct.extensions.spring.converter;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.mapstruct.extensions.spring.SpringMapperConfig.DEFAULT_CONFIGURATION_CLASS_NAME;
+import static org.mapstruct.extensions.spring.SpringMapperConfig.DEFAULT_CONVERSION_SERVICE_BEAN_NAME;
 
 import com.squareup.javapoet.ClassName;
 import java.util.List;
 
 public class ConversionServiceAdapterDescriptor {
+  public static final String DEFAULT_CONVERTER_SCAN_CLASS_NAME = "ConverterScan";
+  public static final String DEFAULT_CONVERTER_SCANS_CLASS_NAME = "ConverterScans";
+
   private ClassName adapterClassName;
-  private String conversionServiceBeanName;
+  private String conversionServiceBeanName = DEFAULT_CONVERSION_SERVICE_BEAN_NAME;
   private List<FromToMapping> fromToMappings;
   private boolean lazyAnnotatedConversionServiceBean;
+  private String configurationClassName = DEFAULT_CONFIGURATION_CLASS_NAME;
 
   private boolean generateConverterScan;
 
   boolean hasNonDefaultConversionServiceBeanName() {
-    return isNotEmpty(getConversionServiceBeanName());
+    return isNotEmpty(getConversionServiceBeanName())
+            && !DEFAULT_CONVERSION_SERVICE_BEAN_NAME.equals(getConversionServiceBeanName());
   }
 
   public ClassName getAdapterClassName() {
@@ -56,6 +63,15 @@ public class ConversionServiceAdapterDescriptor {
     return this;
   }
 
+  public ConversionServiceAdapterDescriptor configurationClassName(
+          final String configurationClassName) {
+    this.configurationClassName = configurationClassName;
+    return this;
+  }
+
+  public String getConfigurationClassName() {
+    return configurationClassName;
+  }
 
   public boolean isGenerateConverterScan() {
     return generateConverterScan;
@@ -67,14 +83,14 @@ public class ConversionServiceAdapterDescriptor {
   }
 
   public ClassName getConverterScanClassName() {
-    return ClassName.get(getAdapterClassName().packageName(), "ConverterScan");
+    return ClassName.get(getAdapterClassName().packageName(), DEFAULT_CONVERTER_SCAN_CLASS_NAME);
   }
 
   public ClassName getConverterScansClassName() {
-    return ClassName.get(getAdapterClassName().packageName(), "ConverterScans");
+    return ClassName.get(getAdapterClassName().packageName(), DEFAULT_CONVERTER_SCANS_CLASS_NAME);
   }
 
   public ClassName getConverterRegistrationConfigurationClassName() {
-    return ClassName.get(getAdapterClassName().packageName(), "ConverterRegistrationConfiguration");
+    return ClassName.get(getAdapterClassName().packageName(), configurationClassName);
   }
 }
