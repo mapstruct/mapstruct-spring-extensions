@@ -69,6 +69,10 @@ public class ConversionServiceAdapterDescriptor {
     return this;
   }
 
+  public String getConfigurationClassName() {
+    return configurationClassName;
+  }
+
   public boolean isGenerateConverterScan() {
     return generateConverterScan;
   }

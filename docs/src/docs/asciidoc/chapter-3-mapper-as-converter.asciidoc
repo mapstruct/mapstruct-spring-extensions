@@ -170,6 +170,70 @@ public class ConversionServiceAdapterIntegrationTest {
 ----
 ====
 
+[[converterRegistrationConfigurationClassName]]
+=== Modifying the name for the generated converter registration configuration class
+
+By default, the converter registration configuration class will have name `ConverterRegistrationConfiguration`.
+If you wish to change this, you can do so by setting the property `converterRegistrationConfigurationClassName`:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@MapperConfig(componentModel = "spring")
+@SpringMapperConfig(
+        converterRegistrationConfigurationClassName = "MyConfiguration",
+        generateConverterScan = true)
+public interface MapstructConfig {}
+----
+====
+
+This changes the generated class name to be the property's value:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@Configuration
+class MyConfiguration {
+  private final ConfigurableConversionService conversionService;
+
+  private final List<Converter<?, ?>> converters;
+
+  MyConfiguration(
+      @Qualifier("conversionService") final ConfigurableConversionService conversionService,
+      final List<Converter<?, ?>> converters) {
+    this.conversionService = conversionService;
+    this.converters = converters;
+  }
+
+  @PostConstruct
+  void registerConverters() {
+    converters.forEach(conversionService::addConverter);
+  }
+}
+----
+====
+
+Also this changes reference to converter registration configuration class from generated ConverterScan class:
+
+====
+[source,java,linenums]
+[subs="verbatim,attributes"]
+----
+@ComponentScan
+@Target(TYPE)
+@Import(MyConfiguration.class)
+@Documented
+@Retention(RUNTIME)
+@Repeatable(ConverterScans.class)
+public @interface ConverterScan {
+  ...
+}
+----
+====
+
+
 [[adapterMethodName]]
 === Modifying the name for the generated adapter method
 

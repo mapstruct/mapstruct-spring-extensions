@@ -41,7 +41,7 @@ public class ConverterScanGenerator extends AdapterRelatedGenerator {
         TypeSpec.annotationBuilder(descriptor.getConverterScanClassName()).addModifiers(PUBLIC);
     final var importAnnotationSpec =
             AnnotationSpec.builder(IMPORT_CLASS_NAME)
-                    .addMember("value", "$L", descriptor.getConverterRegistrationConfigurationClassName() + ".class")
+                    .addMember("value", "$L", descriptor.getConfigurationClassName() + ".class")
                     .build();
     Optional.ofNullable(buildGeneratedAnnotationSpec())
         .ifPresent(converterScanClassTypeSpecBuilder::addAnnotation);
