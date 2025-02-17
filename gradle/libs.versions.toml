@@ -14,7 +14,7 @@ jupiter = "5.11.4"
 mapstruct = "1.4.0.Final"
 mockito = "5.15.2"
 spring = "5.0.0.RELEASE"
-springBoot = "2.7.16"
+springBoot = "2.7.18"
 springDependencyManagement = "1.1.7"
 versionsPlugin = "0.52.0"
 
