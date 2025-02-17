@@ -8,6 +8,8 @@ import static java.util.stream.Collectors.toList;
 import static javax.lang.model.type.TypeKind.DECLARED;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
+import static org.mapstruct.extensions.spring.SpringMapperConfig.DEFAULT_CONFIGURATION_CLASS_NAME;
+import static org.mapstruct.extensions.spring.SpringMapperConfig.DEFAULT_CONVERSION_SERVICE_BEAN_NAME;
 import static org.mapstruct.extensions.spring.converter.ModelElementUtils.hasName;
 
 import com.squareup.javapoet.ClassName;
@@ -134,6 +136,8 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
         .generateConverterScan(getGenerateConverterScan(annotations, roundEnv))
         .lazyAnnotatedConversionServiceBean(
             getLazyAnnotatedConversionServiceBean(annotations, roundEnv))
+        .configurationClassName(
+                getConfigurationClassName(annotations, roundEnv))
         .fromToMappings(getExternalConversionMappings(annotations, roundEnv));
   }
 
@@ -241,8 +245,7 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
             .collect(toList()));
     adapterDescriptor.fromToMappings(fromToMappings);
     writeAdapterClassFile(adapterDescriptor);
-    if (adapterDescriptor.hasNonDefaultConversionServiceBeanName()
-        && adapterDescriptor.isGenerateConverterScan()) {
+    if (adapterDescriptor.isGenerateConverterScan()) {
       writeConverterScanFiles(adapterDescriptor);
     }
   }
@@ -372,7 +375,7 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
 
   private void updateFromDeclaration(
       final MutablePair<String, String> adapterPackageAndClass, final Element element) {
-    final SpringMapperConfig springMapperConfig = element.getAnnotation(SpringMapperConfig.class);
+    final SpringMapperConfig springMapperConfig = toSpringMapperConfig(element);
     adapterPackageAndClass.setLeft(
         Optional.of(springMapperConfig.conversionServiceAdapterPackage())
             .filter(StringUtils::isNotBlank)
@@ -387,7 +390,7 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
   private static String getConversionServiceBeanName(
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return getConfigAnnotationAttribute(
-        annotations, roundEnv, SpringMapperConfig::conversionServiceBeanName, null);
+        annotations, roundEnv, SpringMapperConfig::conversionServiceBeanName, DEFAULT_CONVERSION_SERVICE_BEAN_NAME);
   }
 
   private static Optional<? extends Element> findFirstElementAnnotatedWith(
@@ -417,6 +420,15 @@ public class ConverterMapperProcessor extends GeneratorInitializingProcessor {
       final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
     return getConfigAnnotationAttribute(
         annotations, roundEnv, SpringMapperConfig::lazyAnnotatedConversionServiceBean, TRUE);
+  }
+
+  private static String getConfigurationClassName(
+          final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    return getConfigAnnotationAttribute(
+            annotations,
+            roundEnv,
+            SpringMapperConfig::converterRegistrationConfigurationClassName,
+            DEFAULT_CONFIGURATION_CLASS_NAME);
   }
 
   private static boolean getGenerateConverterScan(
