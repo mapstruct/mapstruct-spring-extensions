@@ -171,9 +171,9 @@ public class ConversionServiceAdapterIntegrationTest {
 ====
 
 [[converterRegistrationConfigurationClassName]]
-=== Modifying the name for the generated converter registration configuration class
+===== Modifying the name for the generated converter registration configuration class
 
-By default, the converter registration configuration class will have name `ConverterRegistrationConfiguration`.
+By default, the generated converter registration configuration class for the <<generateConverterScan>> will have the name `ConverterRegistrationConfiguration`.
 If you wish to change this, you can do so by setting the property `converterRegistrationConfigurationClassName`:
 
 ====
@@ -215,7 +215,7 @@ class MyConfiguration {
 ----
 ====
 
-Also this changes reference to converter registration configuration class from generated ConverterScan class:
+This also changes the reference to the converter registration configuration class from the generated `ConverterScan` class:
 
 ====
 [source,java,linenums]
