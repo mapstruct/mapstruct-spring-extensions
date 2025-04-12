@@ -1,7 +1,7 @@
 [versions]
 asciidoctorPlugin = "4.0.4"
 assertj = "3.27.3"
-commons-io = "2.18.0"
+commons-io = "2.19.0"
 commons-lang3 = "3.17.0"
 compile-testing = "0.21.0"
 dependencyCheck = "12.1.1"
