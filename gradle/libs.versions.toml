@@ -16,7 +16,7 @@ mockito = "5.20.0"
 spring = "5.0.0.RELEASE"
 springBoot = "2.7.18"
 springDependencyManagement = "1.1.7"
-versionsPlugin = "0.52.0"
+versionsPlugin = "0.53.0"
 
 [libraries]
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj"}
