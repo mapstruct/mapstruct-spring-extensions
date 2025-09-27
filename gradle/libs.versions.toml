@@ -2,7 +2,7 @@
 asciidoctorPlugin = "4.0.5"
 assertj = "3.27.5"
 commons-io = "2.20.0"
-commons-lang3 = "3.18.0"
+commons-lang3 = "3.19.0"
 compile-testing = "0.23.0"
 dependencyCheck = "12.1.6"
 dummymaker = "4.0.0"
