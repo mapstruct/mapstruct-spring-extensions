@@ -6,7 +6,6 @@ dependencies {
     testImplementation projects.testExtensions
     testImplementation libs.assertj
     testImplementation libs.bundles.junit.jupiter
-    implementation libs.jsr250
     implementation libs.mapstruct.core
     annotationProcessor libs.mapstruct.processor
     implementation libs.spring.context

@@ -1,7 +1,7 @@
 package org.mapstruct.extensions.spring.converter;
 
+import jakarta.annotation.PostConstruct;
 import java.util.List;
-import javax.annotation.PostConstruct;
 import javax.annotation.processing.Generated;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +22,7 @@ class ConverterRegistrationConfiguration {
     this.myConversionService = myConversionService;
     this.converters = converters;
   }
-  
+
   @PostConstruct
   void registerConverters() {
     converters.forEach(myConversionService::addConverter);
