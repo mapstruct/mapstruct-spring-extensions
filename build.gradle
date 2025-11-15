@@ -55,7 +55,7 @@ subprojects {
     apply plugin: "jacoco"
 
     group = 'org.mapstruct.extensions.spring'
-    version = '2.0.0-SNAPSHOT'
+    version = '2.0.0'
 
     java {
         toolchain {
