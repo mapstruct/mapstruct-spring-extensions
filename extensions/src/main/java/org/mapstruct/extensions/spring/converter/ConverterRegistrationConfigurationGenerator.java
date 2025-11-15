@@ -1,11 +1,20 @@
 package org.mapstruct.extensions.spring.converter;
 
-import static javax.lang.model.element.Modifier.*;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
 
-import com.squareup.javapoet.*;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
+
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.WildcardTypeName;
 
 public class ConverterRegistrationConfigurationGenerator extends AdapterRelatedGenerator {
 
@@ -56,11 +65,7 @@ public class ConverterRegistrationConfigurationGenerator extends AdapterRelatedG
   }
 
   private ClassName postConstructClassName() {
-    if (isTypeAvailable("jakarta.annotation.PostConstruct")) {
       return ClassName.get("jakarta.annotation", "PostConstruct");
-    } else {
-      return ClassName.get("javax.annotation", "PostConstruct");
-    }
   }
 
   private MethodSpec createRegistrationMethodSpec(
