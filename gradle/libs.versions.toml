@@ -13,7 +13,7 @@ jupiter = "6.0.3"
 mapstruct = "1.4.0.Final"
 mockito = "5.23.0"
 spring = "6.0.0"
-springBoot = "3.5.12"
+springBoot = "3.5.13"
 springDependencyManagement = "1.1.7"
 versionsPlugin = "0.53.0"
 
